@@ -47,6 +47,10 @@ export type Database = {
           id: string;
           title: string;
           summary: string | null;
+          headline: string | null;
+          summary_short: string | null;
+          original_title: string | null;
+          original_language: string | null;
           source: string;
           source_url: string | null;
           image_url: string | null;
@@ -65,13 +69,20 @@ export type Database = {
         Row: {
           id: string;
           type: string;
+          title: string | null;
           description: string;
           latitude: number | null;
           longitude: number | null;
           severity: string;
           status: string;
           source: string | null;
+          source_name: string | null;
+          source_url: string | null;
+          source_type: "official" | "news" | "community" | null;
+          location_name: string | null;
           reported_at: string;
+          issued_at: string | null;
+          expires_at: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["hazards"]["Row"], "id" | "created_at"> & {

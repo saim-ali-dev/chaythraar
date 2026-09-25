@@ -1,13 +1,9 @@
 import { XMLParser } from "fast-xml-parser";
-import type { NormalizedNewsItem } from "@/lib/news/types";
+import { detectOriginalLanguage } from "@/lib/news/chitral-times";
+import type { NewsSourceAdapter, NormalizedNewsItem } from "@/lib/news/types";
 
-export const CHITRAL_TIMES_RSS_URL = "https://chitraltimes.com/feed/";
-export const CHITRAL_TIMES_RSS_PAGES = 5;
-
-const parser = new XMLParser({
-  ignoreAttributes: false,
-  processEntities: true,
-});
+const CHITRAL_TODAY_RSS_URL = "https://chitraltoday.net/feed/";
+const parser = new XMLParser({ ignoreAttributes: false, processEntities: true });
 
 type RssCategory = string | { "#text"?: string };
 
@@ -27,21 +23,14 @@ type ParsedFeed = {
   };
 };
 
-export async function fetchChitralTimesItems(): Promise<unknown[]> {
-  const allItems: unknown[] = [];
+export const chitralTodayAdapter: NewsSourceAdapter = {
+  name: "ChitralToday",
+  fetchItems: fetchChitralTodayItems,
+  normalizeItem: normalizeChitralTodayItem,
+};
 
-  for (let page = 1; page <= CHITRAL_TIMES_RSS_PAGES; page += 1) {
-    const pageItems = await fetchChitralTimesPage(page);
-    if (pageItems.length === 0) break;
-    allItems.push(...pageItems);
-  }
-
-  return allItems;
-}
-
-async function fetchChitralTimesPage(page: number): Promise<unknown[]> {
-  const feedUrl = page === 1 ? CHITRAL_TIMES_RSS_URL : `${CHITRAL_TIMES_RSS_URL}?paged=${page}`;
-  const response = await fetch(feedUrl, {
+async function fetchChitralTodayItems(): Promise<unknown[]> {
+  const response = await fetch(CHITRAL_TODAY_RSS_URL, {
     headers: {
       accept: "application/rss+xml, application/xml, text/xml",
       "user-agent": "CHAYTHRAAR-news-ingestion/0.1",
@@ -49,9 +38,7 @@ async function fetchChitralTimesPage(page: number): Promise<unknown[]> {
     signal: AbortSignal.timeout(15000),
   });
 
-  if (!response.ok) {
-    throw new Error(`RSS request returned HTTP ${response.status}.`);
-  }
+  if (!response.ok) throw new Error(`RSS request returned HTTP ${response.status}.`);
 
   const feed = parser.parse(await response.text()) as ParsedFeed;
   const items = feed.rss?.channel?.item;
@@ -59,7 +46,7 @@ async function fetchChitralTimesPage(page: number): Promise<unknown[]> {
   return Array.isArray(items) ? items : [items];
 }
 
-export function normalizeChitralTimesItem(rawItem: unknown): NormalizedNewsItem | null {
+function normalizeChitralTodayItem(rawItem: unknown): NormalizedNewsItem | null {
   if (!isRssItem(rawItem)) return null;
 
   const title = cleanText(rawItem.title);
@@ -74,16 +61,12 @@ export function normalizeChitralTimesItem(rawItem: unknown): NormalizedNewsItem 
     summary_short: null,
     original_title: title,
     original_language: detectOriginalLanguage(title),
-    source: "Chitral Times",
+    source: "ChitralToday",
     source_url: sourceUrl,
     image_url: null,
     published_at: publishedAt,
     category: normalizeCategory(rawItem.category),
   };
-}
-
-export function detectOriginalLanguage(value: string) {
-  return /[\u0600-\u06ff]/u.test(value) ? "ur" : "en";
 }
 
 function isRssItem(value: unknown): value is RssItem {
@@ -117,8 +100,8 @@ function summarizeDescription(value: string | undefined) {
 
   const text = value
     .replace(/<[^>]*>/g, " ")
-    .replace(/\[\.\.\.\]/g, "")
     .replace(/The post.*$/i, "")
+    .replace(/appeared first on.*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
   if (!text) return null;
@@ -126,7 +109,7 @@ function summarizeDescription(value: string | undefined) {
 
   const shortened = text.slice(0, 277).trimEnd();
   const lastSpace = shortened.lastIndexOf(" ");
-  return `${(lastSpace > 180 ? shortened.slice(0, lastSpace) : shortened)}...`;
+  return `${lastSpace > 180 ? shortened.slice(0, lastSpace) : shortened}...`;
 }
 
 function normalizeCategory(value: RssCategory | RssCategory[] | undefined) {
@@ -134,11 +117,6 @@ function normalizeCategory(value: RssCategory | RssCategory[] | undefined) {
     .map((item) => typeof item === "string" ? item : item["#text"] ?? "")
     .map(cleanText)
     .filter(Boolean);
-  const meaningfulCategory = categories.find((item) => !["تازہ ترین", "Latest", "News"].includes(item));
-
-  if (!meaningfulCategory) return "News";
-  if (meaningfulCategory === "چترال خبریں") return "Chitral News";
-  if (meaningfulCategory === "جنرل خبریں") return "General News";
-  if (meaningfulCategory === "مضامین") return "Articles";
-  return meaningfulCategory;
+  const meaningfulCategory = categories.find((item) => !["Latest News", "News"].includes(item));
+  return meaningfulCategory ?? "News";
 }

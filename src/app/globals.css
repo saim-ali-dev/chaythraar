@@ -30,6 +30,10 @@ body {
   font-family: var(--font-geist-sans), sans-serif;
 }
 
+.font-urdu {
+  font-family: var(--font-urdu), "Noto Naskh Arabic", "Noto Sans Arabic", serif;
+}
+
 ::selection {
   background: var(--color-copper-soft);
   color: var(--color-copper-deep);

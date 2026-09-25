@@ -41,6 +41,10 @@ export type NewsEntry = {
   id: string;
   title: string;
   summary: string | null;
+  headline: string | null;
+  summary_short: string | null;
+  original_title: string | null;
+  original_language: string | null;
   source: string;
   source_url: string | null;
   image_url: string | null;

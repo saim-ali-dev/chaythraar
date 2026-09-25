@@ -58,9 +58,13 @@ Set these variables in an ignored local `.env.local` file:
 ```text
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+NEWS_AI_API_KEY=your-openrouter-api-key
+NEWS_AI_API_URL=https://openrouter.ai/api/v1/chat/completions
+NEWS_AI_MODEL=openrouter/free
 ```
 
 The values must come from the Supabase project settings. Never commit `.env.local` or expose the values in source code.
+For news summarization, use an OpenRouter API key in `NEWS_AI_API_KEY`; keep it server-only and never place it in browser code.
 
 To apply the migration without installing the Supabase CLI:
 
@@ -83,6 +87,10 @@ npm run news:ingest
 In addition to the public Supabase variables above, ingestion requires `SUPABASE_SERVICE_ROLE_KEY` in the ignored local `.env.local` file. This server-only key is required because the database has no anonymous write policy; it must never be exposed to browser code or committed.
 
 The command stores RSS metadata and a short source-provided excerpt, deduplicates by `source_url`, leaves `image_url` null, and reports discovered, normalized, inserted, skipped, duplicate, and error counts. It does not fetch full article pages or run on a schedule.
+
+Generated CHAYTHRAAR headlines and summaries are additive fields from `supabase/migrations/20260925010000_add_generated_news_fields.sql`. Apply that migration before running the updated ingestion or backfill command. An OpenAI-compatible summarization provider can be configured with server-only `NEWS_AI_API_KEY`, `NEWS_AI_API_URL`, and `NEWS_AI_MODEL`; without those variables, ingestion stores original metadata and leaves generated fields null.
+
+After applying the migration, use `npm run news:summarize` to manually backfill rows with missing generated fields. The command is never run automatically and does not copy full source articles.
 
 ## Verified Encyclopedia Seeds
 
