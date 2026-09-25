@@ -6,8 +6,8 @@ import { suggestedPrompts } from "@/data/demo-content";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-export function AssistantPanel() {
-  const [value, setValue] = useState("");
+export function AssistantPanel({ initialValue = "", sectionId }: { initialValue?: string; sectionId?: string }) {
+  const [value, setValue] = useState(initialValue);
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -16,7 +16,7 @@ export function AssistantPanel() {
   }
 
   return (
-    <section className="mt-12" aria-labelledby="assistant-heading">
+    <section id={sectionId} className="mt-12" aria-labelledby="assistant-heading">
       <Card className="relative overflow-hidden border-[var(--color-line-strong)] p-5 sm:p-7 lg:p-8">
         <div className="absolute right-0 top-0 h-full w-1/3 bg-[linear-gradient(135deg,transparent_0%,rgba(241,237,229,0.7)_100%)]" />
         <div className="relative">

@@ -1,4 +1,15 @@
-export type ContentStatus = "demo";
+export type ContentStatus = "demo" | "live";
+
+export type EncyclopediaEntry = {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  image_url: string | null;
+  source: string | null;
+  source_url: string | null;
+  created_at: string;
+};
 
 export type EncyclopediaTopic = {
   id: string;

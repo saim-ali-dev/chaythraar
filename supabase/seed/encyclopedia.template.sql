@@ -1,0 +1,32 @@
+-- CHAYTHRAAR Encyclopedia seed template
+--
+-- This file intentionally inserts no rows. Replace every placeholder only after
+-- the content has been reviewed against a trustworthy, identifiable source.
+-- Do not treat this template as factual content or run it unchanged.
+--
+-- Content requirements:
+--   * Verify every claim before insertion.
+--   * Use image URLs that are publicly accessible and legally usable by CHAYTHRAAR.
+--   * Use `source` to identify the originating publication, institution, archive,
+--     interview, or other source used for verification.
+--   * Summarize source material in original wording. Do not copy copyrighted
+--     articles or other publications verbatim.
+--
+-- The current schema has `source` for attribution. It does not yet have a
+-- `source_url` column; see the root README before adding URL-specific provenance.
+
+-- Example structure only. Keep this statement commented until all placeholders
+-- have been replaced with a reviewed record.
+-- insert into public.encyclopedia (
+--   title,
+--   category,
+--   content,
+--   image_url,
+--   source
+-- ) values (
+--   'REPLACE_WITH_VERIFIED_TITLE',
+--   'REPLACE_WITH_VERIFIED_CATEGORY',
+--   'REPLACE_WITH_ORIGINAL_VERIFIED_SUMMARY',
+--   'REPLACE_WITH_PUBLICLY_ACCESSIBLE_LEGALLY_USABLE_IMAGE_URL',
+--   'REPLACE_WITH_ORIGINATING_SOURCE'
+-- );
