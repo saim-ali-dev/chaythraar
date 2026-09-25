@@ -4,7 +4,12 @@ import type { SafetyEvent } from "@/types/safety";
 
 type HazardRow = Database["public"]["Tables"]["hazards"]["Row"];
 
-export async function getSafetyEvents(): Promise<SafetyEvent[]> {
+export type SafetyReadResult = {
+  events: SafetyEvent[];
+  error: string | null;
+};
+
+export async function getSafetyEvents(): Promise<SafetyReadResult> {
   try {
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase
@@ -14,13 +19,13 @@ export async function getSafetyEvents(): Promise<SafetyEvent[]> {
 
     if (error) {
       console.error("Unable to load safety events.", error);
-      return [];
+      return { events: [], error: "Safety events could not be loaded from the public data source." };
     }
 
-    return (data ?? []).map(toSafetyEvent);
+    return { events: (data ?? []).map(toSafetyEvent), error: null };
   } catch (error) {
     console.error("Unable to connect to the safety data source.", error);
-    return [];
+    return { events: [], error: "Safety events could not be loaded from the public data source." };
   }
 }
 

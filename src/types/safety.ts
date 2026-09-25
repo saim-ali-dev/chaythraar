@@ -23,7 +23,7 @@ export type SafetyEvent = {
 export function isSafetyEventExpired(event: Pick<SafetyEvent, "expires_at">, now = new Date()) {
   if (!event.expires_at) return false;
   const expiresAt = new Date(event.expires_at);
-  return !Number.isNaN(expiresAt.getTime()) && expiresAt.getTime() < now.getTime();
+  return !Number.isNaN(expiresAt.getTime()) && expiresAt.getTime() <= now.getTime();
 }
 
 export function getSafetyStatus(event: SafetyEvent, now = new Date()) {
