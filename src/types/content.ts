@@ -37,6 +37,18 @@ export type NewsItem = {
   status: ContentStatus;
 };
 
+export type NewsEntry = {
+  id: string;
+  title: string;
+  summary: string | null;
+  source: string;
+  source_url: string | null;
+  image_url: string | null;
+  published_at: string;
+  category: string;
+  created_at: string;
+};
+
 export type SafetyItem = {
   id: string;
   title: string;

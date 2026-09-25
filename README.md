@@ -72,6 +72,18 @@ To apply the migration without installing the Supabase CLI:
 
 No seed data is included yet. Content remains local demo data until verified ingestion and moderation flows are implemented.
 
+## News Ingestion
+
+The first ingestion source is the publicly advertised Chitral Times RSS feed at `https://chitraltimes.com/feed/`. Run it manually with:
+
+```bash
+npm run news:ingest
+```
+
+In addition to the public Supabase variables above, ingestion requires `SUPABASE_SERVICE_ROLE_KEY` in the ignored local `.env.local` file. This server-only key is required because the database has no anonymous write policy; it must never be exposed to browser code or committed.
+
+The command stores RSS metadata and a short source-provided excerpt, deduplicates by `source_url`, leaves `image_url` null, and reports discovered, normalized, inserted, skipped, duplicate, and error counts. It does not fetch full article pages or run on a schedule.
+
 ## Verified Encyclopedia Seeds
 
 The file [supabase/seed/encyclopedia.template.sql](supabase/seed/encyclopedia.template.sql) is a commented template only. It contains no real records and must not be run unchanged.
