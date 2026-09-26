@@ -110,9 +110,70 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["translations"]["Insert"]>;
         Relationships: [];
       };
+      khowar_lexicon: {
+        Row: {
+          id: string;
+          dataset_id: string;
+          record_type: "letter" | "word";
+          record_index: number;
+          entry: string;
+          source_name: string;
+          source_url: string;
+          license: string;
+          attribution: string;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["khowar_lexicon"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["khowar_lexicon"]["Insert"]>;
+        Relationships: [];
+      };
+      knowledge_chunks: {
+        Row: {
+          id: string;
+          source_type: "encyclopedia" | "news" | "safety" | "place" | "translation" | "khowar_lexicon";
+          source_id: string;
+          chunk_index: number;
+          content: string;
+          source_name: string | null;
+          source_url: string | null;
+          metadata: Json;
+          embedding: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["knowledge_chunks"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["knowledge_chunks"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      match_knowledge_chunks: {
+        Args: {
+          query_embedding: string;
+          match_count?: number;
+          source_type_filter?: string | null;
+        };
+        Returns: {
+          id: string;
+          source_type: string;
+          source_id: string;
+          chunk_index: number;
+          content: string;
+          source_name: string | null;
+          source_url: string | null;
+          metadata: Json;
+          similarity: number;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

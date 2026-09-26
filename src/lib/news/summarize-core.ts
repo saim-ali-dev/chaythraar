@@ -19,12 +19,17 @@ export type SafetySummarizationInput = {
   locationName: string | null;
 };
 
+export type AssistantCompletionInput = {
+  systemPrompt: string;
+  userPayload: Record<string, unknown>;
+};
+
 export function isNewsSummarizationConfigured() {
-  return Boolean(process.env.NEWS_AI_API_KEY && process.env.NEWS_AI_API_URL && process.env.NEWS_AI_MODEL);
+  return Boolean(process.env.GROQ_API_KEY && process.env.NEWS_AI_API_URL && process.env.NEWS_AI_MODEL);
 }
 
 export async function summarizeNews(input: NewsSummarizationInput): Promise<NewsSummarizationResult | null> {
-  const apiKey = process.env.NEWS_AI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   const apiUrl = process.env.NEWS_AI_API_URL;
   const model = process.env.NEWS_AI_MODEL;
   if (!apiKey || !apiUrl || !model) return null;
@@ -46,7 +51,7 @@ export async function summarizeNews(input: NewsSummarizationInput): Promise<News
 }
 
 export async function summarizeSafety(input: SafetySummarizationInput): Promise<NewsSummarizationResult | null> {
-  const apiKey = process.env.NEWS_AI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   const apiUrl = process.env.NEWS_AI_API_URL;
   const model = process.env.NEWS_AI_MODEL;
   if (!apiKey || !apiUrl || !model) return null;
@@ -66,6 +71,21 @@ export async function summarizeSafety(input: SafetySummarizationInput): Promise<
   });
 
   return parseSummarization(content, "en");
+}
+
+export async function completeAssistantJson(input: AssistantCompletionInput): Promise<string | null> {
+  const apiKey = process.env.GROQ_API_KEY;
+  const apiUrl = process.env.NEWS_AI_API_URL;
+  const model = process.env.NEWS_AI_MODEL;
+  if (!apiKey || !apiUrl || !model) return null;
+
+  return requestSummaryContent({
+    apiKey,
+    apiUrl,
+    model,
+    systemPrompt: input.systemPrompt,
+    userPayload: input.userPayload,
+  });
 }
 
 async function requestSummaryContent(input: {
