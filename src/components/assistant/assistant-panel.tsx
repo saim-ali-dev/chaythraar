@@ -6,8 +6,9 @@ import { suggestedPrompts } from "@/data/demo-content";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { AssistantResult, AssistantSource } from "@/lib/assistant/service";
+import type { SuggestedPrompt } from "@/types/content";
 
-export function AssistantPanel({ initialValue = "", sectionId }: { initialValue?: string; sectionId?: string }) {
+export function AssistantPanel({ initialValue = "", sectionId, suggestedPrompts: promptOptions = suggestedPrompts }: { initialValue?: string; sectionId?: string; suggestedPrompts?: SuggestedPrompt[] }) {
   const [value, setValue] = useState(initialValue);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AssistantResult | null>(null);
@@ -50,7 +51,7 @@ export function AssistantPanel({ initialValue = "", sectionId }: { initialValue?
           {loading && <p className="mt-3 text-sm text-[var(--color-muted)]" role="status">Searching trusted local knowledge...</p>}
           {error && <p className="mt-3 text-sm text-[var(--color-copper-deep)]" role="alert">{error}</p>}
           {result && <div className="mt-5 border-t border-[var(--color-line)] pt-4" aria-live="polite"><p className="whitespace-pre-wrap text-sm leading-6 text-[var(--color-ink)]">{result.answer}</p>{result.sources.length > 0 && <div className="mt-4"><h3 className="text-xs font-semibold text-[var(--color-muted)]">Sources</h3><ul className="mt-2 flex flex-wrap gap-x-4 gap-y-2">{result.sources.map((source) => <li key={`${source.type}:${source.id}`} className="text-xs">{renderSource(source)}</li>)}</ul></div>}</div>}
-          <div className="mt-6 flex flex-wrap gap-2">{suggestedPrompts.map((item) => <button key={item.id} type="button" disabled={loading} onClick={() => { setValue(item.prompt); setResult(null); setError(null); }} className="rounded-full border border-[var(--color-line)] bg-white px-3 py-2 text-left text-xs text-[var(--color-slate)] transition-colors hover:border-[var(--color-copper)] hover:text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] disabled:opacity-60">{item.label}</button>)}</div>
+          <div className="mt-6 flex flex-wrap gap-2">{promptOptions.map((item) => <button key={item.id} type="button" disabled={loading} onClick={() => { setValue(item.prompt); setResult(null); setError(null); }} className="rounded-full border border-[var(--color-line)] bg-white px-3 py-2 text-left text-xs text-[var(--color-slate)] transition-colors hover:border-[var(--color-copper)] hover:text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] disabled:opacity-60">{item.label}</button>)}</div>
         </div>
       </Card>
     </section>
