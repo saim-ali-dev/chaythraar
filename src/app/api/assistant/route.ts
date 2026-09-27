@@ -1,4 +1,4 @@
-import { AssistantServiceError, answerAssistantMessage } from "@/lib/assistant/service";
+import { AssistantServiceError, answerAssistantMessage, logAssistantRuntimeError } from "@/lib/assistant/service";
 
 const MAX_REQUEST_BYTES = 8192;
 const MAX_MESSAGE_CHARACTERS = 1200;
@@ -41,6 +41,7 @@ export async function POST(request: Request): Promise<Response> {
     if (error instanceof AssistantServiceError) {
       return Response.json({ error: error.message }, { status: error.status });
     }
+    logAssistantRuntimeError(error);
     return Response.json({ error: "The assistant could not complete the request." }, { status: 500 });
   }
 }
