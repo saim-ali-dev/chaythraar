@@ -60,7 +60,7 @@ test("left and right entries on one physical row keep independent excerpts", () 
 
 test("known Bashir entries preserve top-level and subentry distinctions", () => {
   const report = parseBashirDirectory(`${process.cwd()}/bashir_chunks`);
-  assert.equal(report.ambiguousEntries.length, 37);
+  assert.equal(report.ambiguousEntries.length, 32);
   for (const headword of ["bas1", "bas bik", "baseék", "basésum", "drung", "dunyá", "andabá", "-ar", "dros"]) {
     assert.ok(findBashirEntry(report, headword), `missing ${headword}`);
   }
@@ -78,10 +78,13 @@ test("known Bashir entries preserve top-level and subentry distinctions", () => 
   assert.equal((dunya?.provenance.crossColumnContinuationCandidate as { sourceFilename: string } | null)?.sourceFilename, "bashir-052-0001-0010.txt");
   assert.equal(report.entries.find((entry) => entry.headword === "drung")?.ambiguous, false);
   const anuSuffix = report.entries.find((entry) => entry.headword === "-ánu");
-  assert.equal(anuSuffix?.ambiguous, true);
+  assert.equal(anuSuffix?.ambiguous, false);
   assert.ok(anuSuffix?.rawSourceExcerpt);
 
-  for (const [headword, column] of [["ka", 2], ["aqá", 1], ["hínǰu", 1], ["hókum", 1]] as const) {
+  for (const [headword, column] of [
+    ["ka", 2], ["aqá", 1], ["hínǰu", 1], ["hókum", 1],
+    ["af", 2], ["-ánu", 2], ["bik2", 2], ["boγmá", 2], ["boót", 2],
+  ] as const) {
     const confirmedEntry = report.entries.find((entry) => entry.headword === headword);
     assert.ok(confirmedEntry, `missing confirmed entry ${headword}`);
     assert.equal(confirmedEntry.column, column, `${headword} column`);
@@ -91,6 +94,53 @@ test("known Bashir entries preserve top-level and subentry distinctions", () => 
   const kaEntry = report.entries.find((entry) => entry.headword === "ka");
   assert.match(kaEntry?.rawSourceExcerpt ?? "", /ar korík/u);
   assert.equal(report.ambiguousEntries.filter((entry) => !entry.provenance.crossColumnContinuationCandidate).length, 0);
+  for (const [headword, page, line] of [["angáh", 17, 57], ["boík1", 31, 60]] as const) {
+    const neighboringEntry = report.entries.find((entry) => entry.headword === headword);
+    assert.ok(neighboringEntry, `neighboring entry ${headword} remains present`);
+    assert.equal(neighboringEntry.pdfPage, page);
+    assert.equal(neighboringEntry.sourceLineStart, line);
+    assert.equal(neighboringEntry.column, 1);
+  }
+});
+
+test("PDF-confirmed page-end entries use only their exact right-column rows", () => {
+  const directory = `${process.cwd()}/bashir_chunks`;
+  const report = parseBashirDirectory(directory);
+  const repeatedReport = parseBashirDirectory(directory);
+  const confirmed = [
+    { headword: "af", page: 14, line: 52, filename: "bashir-014-0051-0060.txt", leftText: "ačhó" },
+    { headword: "-ánu", page: 17, line: 57, filename: "bashir-017-0051-0060.txt", leftText: "angáh" },
+    { headword: "bik2", page: 28, line: 52, filename: "bashir-028-0051-0060.txt", leftText: "whole family" },
+    { headword: "boγmá", page: 30, line: 55, filename: "bashir-030-0051-0060.txt", leftText: "take the saddle" },
+    { headword: "boót", page: 31, line: 60, filename: "bashir-031-0051-0060.txt", leftText: "boík1" },
+  ];
+
+  for (const item of confirmed) {
+    const entry = report.entries.find((candidate) => candidate.headword === item.headword);
+    const repeated = repeatedReport.entries.find((candidate) => candidate.headword === item.headword);
+    assert.ok(entry, `missing ${item.headword}`);
+    assert.equal(entry.pdfPage, item.page);
+    assert.equal(entry.sourceLineStart, item.line);
+    assert.equal(entry.column, 2);
+    assert.equal(entry.ambiguous, false);
+    assert.equal(entry.sourceEntryId, repeated?.sourceEntryId, `${item.headword} stable source identity`);
+    assert.match(entry.rawSourceExcerpt, new RegExp(item.headword, "u"));
+    assert.doesNotMatch(entry.rawSourceExcerpt, new RegExp(item.leftText, "u"));
+
+    const physicalRows = entry.provenance.rawPhysicalSourceLines as Array<{
+      filename: string;
+      pdfPage: number;
+      sourceLine: number;
+      column: number;
+      columnText: string;
+      raw: string;
+    }>;
+    assert.ok(physicalRows.some((row) => row.filename === item.filename && row.pdfPage === item.page && row.sourceLine === item.line));
+    assert.ok(physicalRows.every((row) => row.column === 2));
+    assert.equal(entry.rawSourceExcerpt, physicalRows.map((row) => row.columnText).join("\n"));
+  }
+
+  assert.equal(report.ambiguousEntries.length, 32);
 });
 
 test("entry excerpts and metadata use only their resolved column text", () => {

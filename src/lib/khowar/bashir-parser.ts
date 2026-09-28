@@ -5,11 +5,16 @@ import { join } from "node:path";
 const COLUMN_START = 68;
 const DICTIONARY_START_PAGE = 14;
 const POS = "(?:n|adj|adv|vtr|vintr|vcs|pro|conjunction|interjection|postposition|noun|verb transitive|verb intransitive)";
-const CONFIRMED_COLUMN_RESOLUTIONS = new Map<string, { column: 1 | 2; headword?: string; split?: number }>([
-  ["18:24", { column: 2, headword: "ka", split: 61 }],
+const CONFIRMED_COLUMN_RESOLUTIONS = new Map<string, { column: 1 | 2; headword?: string; candidateHeadword?: string; split?: number }>([
+  ["18:24", { column: 2, headword: "ka", candidateHeadword: "ar korík", split: 61 }],
   ["18:57", { column: 1 }],
   ["68:34", { column: 1 }],
   ["68:44", { column: 1 }],
+  ["14:52", { column: 2, headword: "af" }],
+  ["17:57", { column: 2, headword: "-ánu" }],
+  ["28:52", { column: 2, headword: "bik2" }],
+  ["30:55", { column: 2, headword: "boγmá" }],
+  ["31:60", { column: 2, headword: "boót" }],
 ]);
 
 export type BashirFragment = {
@@ -375,9 +380,13 @@ function extractPosCandidates(text: string, line: SourceLine, column: 1 | 2): Ar
     const offset = match.index ?? 0;
     const alternatePronunciation = match[2].trim() || null;
     const pos = match[3].trim();
+    const matchedHeadword = match[1].trim().replace(/\s+\/$/u, "");
     const resolution = CONFIRMED_COLUMN_RESOLUTIONS.get(`${line.page}:${line.line}`);
-    if (resolution && resolution.column !== column) continue;
-    const headword = resolution?.headword ?? match[1].trim().replace(/\s+\/$/u, "");
+    const appliesToCandidate = resolution && (!resolution.headword
+      || resolution.headword === matchedHeadword
+      || resolution.candidateHeadword === matchedHeadword);
+    if (appliesToCandidate && resolution.column !== column) continue;
+    const headword = appliesToCandidate ? resolution.headword ?? matchedHeadword : matchedHeadword;
     candidates.push({
       headword,
       partOfSpeech: pos.split(/\s*,\s*/u),
@@ -416,6 +425,7 @@ function getSourceLineSpans(lines: SourceLine[]) {
 }
 
 function findCrossColumnContinuation(entry: BashirEntry, entryLines: SourceLine[], sourceLines: SourceLine[]) {
+  if (CONFIRMED_COLUMN_RESOLUTIONS.get(`${entry.pdfPage}:${entry.sourceLineStart}`)?.column === entry.column) return null;
   if (entry.column !== 2) return null;
   const pages = unique(entryLines.map((line) => line.page));
   const finalPage = pages.at(-1);
