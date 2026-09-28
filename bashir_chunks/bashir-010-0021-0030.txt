@@ -1,0 +1,10 @@
+cf.             - compare with
+Eng.            - English
+Id.             - idiom, idiomatic
+Ir.             - Iranian
+Lit.            - literal meaning
+L:1938          - Lorimer (1938)
+L:1962          - Lorimer (1962)
+M:1936          - Morgenstierne (1936)
+M:1973          - Morgenstierne (1973)
+n               - noun

@@ -1,0 +1,10 @@
+Acknowledgements and front matter
+
+
+ Khowar       Roman                 IPA          Phonetic description
+ letter       representation        symbol
+
+ ‫ث‬            s                           s      alveolar sibilant, voiceless
+ ‫ج‬            ǰ                           d͡ʑ    palatal affricate, voiced
+ ‫ݮ‬            j̣                          ͡ɖʑ    retroflex affricate, voiced
+ ‫چ‬            č                     ͡ tɕ         palatal affricate, voiceless

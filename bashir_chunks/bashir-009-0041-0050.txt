@@ -1,0 +1,10 @@
+-        Initials of persons who have supplied the word and its gloss, or the example sentence, are
+indicated in parentheses following the word or sentence.
+-        Etymological notes for some words, where the information is readily available or widely known.
+Where an etymology is given, it refers only to the headword, from which other forms or idiomatic uses
+can be secondarily derived. Etymological notes are enclosed in square brackets, []. If a note says ”cf. lg
+X form”, this means that the words in question are identical or very similar in form, but the direction of
+borrowing is unclear. Unless otherwise indicated, these etymological notes are due to the author.
+-        Derivations of some words (e.g. root + suffix, or elements of a compound), enclosed in
+parentheses ().
+

@@ -1,0 +1,10 @@
+ ‫ض‬            z                           z      alveolar sibilant, voiced
+ ‫ط‬            t                           t      dental stop, voiceless
+ ‫ظ‬            z                           z      alveolar sibilant, voiced
+ ‫ع‬            a                           ɑ      low back vowel
+              i                           i      high front vowel
+              e                           ɛ      mid front vowel
+                                                 no unique sound
+ ‫غ‬            γ                     γ            velar fricative, voiced
+ ‫ف‬            f                     f            labio-dental fricative, voiceless
+ ‫ق‬            q                     q            post-velar stop, voiceless

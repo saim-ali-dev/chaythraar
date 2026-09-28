@@ -1,0 +1,10 @@
+Ur.             - Urdu
+vcs             - verb, causative
+vintr           - verb, intransitive
+vtr             - verb, transitive
+Z:p.c.          - C.P. Zoller (personal communication)
+<               - borrowed from, or developed from
+←               - synchronically derived from
+
+
+A brief introduction to the Khowar language

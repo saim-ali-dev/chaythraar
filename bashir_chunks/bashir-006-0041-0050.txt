@@ -1,0 +1,10 @@
+              i (with diacritic)    i        high front vowel
+              u (with diacritic)    ʊ        high/mid back vowel
+ ‫ب‬            b                     b        bilabial stop, voiced
+ ‫پ‬            p                     p        bilabial stop, voiceless
+ ‫ﭘﮭ‬           ph                    ph       bilabial stop, voiceless and aspirated
+ ‫ت‬            t                     t        dental stop, voiceless
+ ‫ﺗﮭ‬           th                    th       dental stop, voiceless aspirated
+ ‫ٹ‬            ṭ                     ʈ        retroflex stop, voiceless
+ ‫ﮢﮭ‬           ṭh                    ʈh       retroflex stop, voiceless aspirated
+

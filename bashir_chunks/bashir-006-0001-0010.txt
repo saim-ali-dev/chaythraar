@@ -1,0 +1,10 @@
+Acknowledgements and front matter
+
+
+script will also be able to make use of the dictionary easily. The roman characters used, along with the
+Khowar letters they correspond to, IPA symbols for them, and phonetic descriptions of the sounds they
+represent are shown in Table 2. Exclusively Arabic letters are retained in spellings of some Khowar
+words of Arabic, Persian, or Urdu origin; and, as is the case with Urdu, many of them no longer
+represent their original Arabic sounds.
+         Stressed vowels are indicated with an acute accent over the vowel symbol; for example <á>
+means stressed /a/. With polysyllabic words one syllable is clearly prominent, and is marked with the

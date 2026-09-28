@@ -1,0 +1,9 @@
+ ‫ﻗﮭ‬           qh                    qh           post-velar stop, voiceless aspirated
+ ‫ک‬            k                     k            velar stop, voiceless
+ ‫ﮐﮭ‬           kh                    kh           velar stop, voiceless aspirated
+ ‫گ‬            g                     g            velar stop, voiced
+ ‫ل‬            l                     l            lateral approximant - slightly palatalized
+ ‫م‬            m                     m            bilabial nasal
+
+
+                                                         v

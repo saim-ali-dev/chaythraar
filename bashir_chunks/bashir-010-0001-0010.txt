@@ -1,0 +1,10 @@
+Acknowledgements and front matter
+
+
+
+
+    Many words whose underlying form ends in a voiced consonant undergo final devoicing in normal
+conversation. In this work, whichever form was given to me first is presented as the lemma, regardless
+of whether it is considered an underlying voiced consonant-final form, or the form showing final
+devoicing. For example, the word zab ‘insistence, stubbornness’ is often heard as zap, reflecting this
+final devoicing.

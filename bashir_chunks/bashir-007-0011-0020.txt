@@ -1,0 +1,10 @@
+ ‫ﭼﮭ‬           čh                     ͡tɕh        palatal affricate, voiceless aspirated
+ ‫ݯ‬            c̣                     ͡ ʈʂ        retroflex affricate, voiceless
+ ‫ݯﮭ‬           cḥ                     ͡ ʈ ʂh     retroflex affricate, voiceless aspirated
+ ‫ح‬            h                           h      pharyngeal fricative, voiceless
+ ‫خ‬            x                           x      velar fricative, voiceless
+ ‫څ‬            ts                       ͡ ts      dental/alveolar affricate, voiceless
+ ‫څﮭ‬           tsh                       ͡ t sh   dental/alveolar affricate, voiceless aspirated
+ ‫ځ‬            dz                          d͡z    dental alveolar affricate, voiced
+ ‫د‬            d                           d      dental stop, voiced
+ ‫ڈ‬            ḍ                           ɖ      retroflex stop, voiced

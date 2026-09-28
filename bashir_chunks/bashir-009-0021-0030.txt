@@ -1,0 +1,10 @@
+-        Parts of speech are abbreviated as follows: noun - n, adjective - adj, adverb - adv, transitive verb -
+vtr, and intransitive verb - vintr. Some verbs are marked as both intransitive and transitive. This occurs
+when a verb (a complex predicate with a nominal or adjectival element plus a transitive verbalizer) is
+syntactically transitive but semantically intransitive. For example, ban žibik ‘to be beaten’ (lit. ‘to eat a
+stick’ is syntactically transitive, since its verbalizer žibík ‘to eat’ is transitive, but the sense of the verb is
+intransitive. On the other hand, I have been able to find only one or two words whose verbalizer is
+intransitive but whose sense is transitive. One of these is c ̣ang bik ‘to embrace’.
+-        One or more English definitions or glosses indicating various senses the word can have for
+different speakers; glosses or extended meanings are enclosed in single quotes. Many of these definitions
+are descriptions of appearance or function, rather than single-word glosses. In many cases, only the sense

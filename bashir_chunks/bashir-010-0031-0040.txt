@@ -1,0 +1,10 @@
+OIr             - Old Iranian
+pl              - plural
+pro             - pronoun
+pronunc         - pronunciation, pronunciations
+Prov.           - proverb
+Prs.            - Persian
+Skt.            - Sanskrit
+syn             - synonym
+T:p.c.          - Robert Tegethoff (personal communication)
+T:nnnn          - Turner:entry number (https://dsal.uchicago.edu/dictionaries/soas/)

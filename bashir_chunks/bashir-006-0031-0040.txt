@@ -1,0 +1,10 @@
+writers. Retroflex sounds are represented consistently with a dot under the consonant letter; palatal
+sounds have a haček <ˇ> above the consonant letter; and aspirated consonants are followed by a
+superscript <h>.
+
+                         Table 2. Roman-based symbols used in this vocabulary
+
+ Khowar       Roman                 IPA      Phonetic description
+ letter       representation        symbol
+
+ ‫ا‬            a (with diacritic)    ɑ        low back vowel

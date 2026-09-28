@@ -1,0 +1,10 @@
+Acknowledgements and front matter
+
+
+ Khowar       Roman                 IPA      Phonetic description
+ letter       representation        symbol
+
+ ‫ن‬        n                         n        alveolar nasal
+ ‫و‬        ʋ                         ʋ        bilabial approximant
+          u                         ʊ        high/mid back vowel
+          o                         ɔ        open mid back vowel

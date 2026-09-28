@@ -1,0 +1,10 @@
+acute accent <ˊ>. The question of monosyllabic words is complicated by the fact that there is a
+perceptible difference in pronunciation among them. I think this will be further clarified by bringing to
+bear Strand’s analysis of posterior vs. anterior phonation (Strand 2022). In the meanwhile, however,
+since there is no simple or obvious way to indicate these differences in writing, I have treated
+monosyllabic words as inherently stressable; that is, unstressed in isolation, but capable of taking stress
+in certain contexts, e.g. with an unstressed case ending.
+         Low tone, in those words which clearly have it and also where I have heard it in the
+pronunciation of particular words or a particular individual, is represented with a doubled vowel symbol
+with an acute stress on the second copy of the vowel. For example, <aá> represents a low tone and
+elongated pronunciation of the vowel /a/. This may result in a word appearing to have stress doubly

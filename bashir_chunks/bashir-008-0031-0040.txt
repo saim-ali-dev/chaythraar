@@ -1,0 +1,10 @@
+roman type and are in most cases the usual citation forms of words. For nouns, this is the singular, direct
+case form. For verbs, it is the infinitive; for adjectives and adverbs, it is their single, invariant form.
+Bound lexical morphemes are indicated with a hyphen preceding a suffixal element or following a
+prefixal element. For example, -žéri denotes the offspring of a non-domesticated animal. Prefixal
+elements are rare, and originate in Persian prepositions, mainly be- ‘without’, which in older borrowings
+has become ʋe- in Khowar, as in ʋesóru ‘widow’, lit. ‘without-head’). In newer borrowings, like some
+words which have entered Khowar through Urdu, it appears as be-.
+        Words derived from a headword or collocations involving it are presented as sub-entries of that
+lemma. Sub-entries include some derivational forms, e.g. transitive or causative forms of a verb,
+compounds, frequent collocations, and idioms or involving the lemma. An example of an entry for the

@@ -1,0 +1,10 @@
+ ‫ذ‬            z                           z      alveolar sibilant, voiced
+ ‫ر‬            r                           ɾ      alveolar flap
+ ‫ڑ‬            ɫ                           ɫ      dental approximant, velarized
+ ‫ز‬            z                           z      alveolar sibilant, voiced
+ ‫ژ‬            ž                           ʑ      palatal sibilant, voiced
+ ‫ݱ‬            ẓ                           ʐ      retroflex sibilant, voiced
+ ‫س‬            s                           s      alveolar sibilant, voiceless
+ ‫ش‬            š                           ɕ      palatal sibilant, voiceless
+ ‫ݰ‬            ṣ                           ʂ      retroflex sibilant, voicless
+ ‫ص‬            s                           s      alveolar sibilant, voiceless
