@@ -11,11 +11,15 @@ const PAGE_SIZE = 500;
 const UPSERT_BATCH_SIZE = 25;
 const CHUNK_LENGTH = 1400;
 const CHUNK_OVERLAP = 180;
+const KHOWAR_BATCH_MAX_RECORDS = 80;
+const KHOWAR_BATCH_MAX_CHARACTERS = 1200;
+const KHOWAR_TOKENS_PER_CHARACTER_ESTIMATE = 0.85;
+const KHOWAR_TARGET_TOKENS_PER_MINUTE = 20000;
 const INDEXER_ID = "chaythraar-rag-index-v1";
 const INDEXABLE_SOURCE_TYPES = new Set<KnowledgeSourceType>(["encyclopedia", "news", "safety", "place", "translation", "khowar_lexicon"]);
 
 type EncyclopediaRow = Pick<Database["public"]["Tables"]["encyclopedia"]["Row"], "id" | "title" | "category" | "content" | "image_url" | "source" | "source_url" | "created_at">;
-type PlaceRow = Pick<Database["public"]["Tables"]["places"]["Row"], "id" | "name" | "description" | "category" | "latitude" | "longitude" | "opening_time" | "closing_time" | "source" | "created_at">;
+type PlaceRow = Pick<Database["public"]["Tables"]["places"]["Row"], "id" | "name" | "description" | "category" | "latitude" | "longitude" | "opening_time" | "closing_time" | "source" | "source_url" | "created_at">;
 type NewsRow = Pick<Database["public"]["Tables"]["news"]["Row"], "id" | "title" | "summary" | "headline" | "summary_short" | "original_title" | "original_language" | "source" | "source_url" | "published_at" | "category">;
 type HazardRow = Pick<Database["public"]["Tables"]["hazards"]["Row"], "id" | "type" | "title" | "description" | "latitude" | "longitude" | "severity" | "status" | "source" | "source_name" | "source_url" | "source_type" | "location_name" | "reported_at" | "issued_at" | "expires_at">;
 type TranslationRow = Pick<Database["public"]["Tables"]["translations"]["Row"], "id" | "khowar" | "urdu" | "english" | "example" | "verified" | "source">;
@@ -33,6 +37,8 @@ type IndexDocument = {
   source_url: string | null;
   metadata: Json;
   source_record_count?: number;
+  chunk_index_offset?: number;
+  pre_chunked?: boolean;
 };
 
 type IndexChunk = IndexDocument & {
@@ -56,7 +62,7 @@ async function main() {
       .select("id, title, category, content, image_url, source, source_url, created_at")
       .order("id").range(from, to)),
     loadPages<PlaceRow>((from, to) => supabase.from("places")
-      .select("id, name, description, category, latitude, longitude, opening_time, closing_time, source, created_at")
+      .select("id, name, description, category, latitude, longitude, opening_time, closing_time, source, source_url, created_at")
       .order("id").range(from, to)),
     loadPages<NewsRow>((from, to) => supabase.from("news")
       .select("id, title, summary, headline, summary_short, original_title, original_language, source, source_url, published_at, category")
@@ -88,6 +94,7 @@ async function main() {
   const existingByKey = new Map(existingChunks.map((chunk) => [chunkKey(chunk), chunk]));
   const rowsToWrite: ChunkInsert[] = [];
   const reportByType = new Map<KnowledgeSourceType, IndexReport>();
+  let nextKhowarEmbeddingAt = 0;
 
   for (const document of documents) {
     if (!reportByType.has(document.source_type)) {
@@ -115,7 +122,19 @@ async function main() {
       continue;
     }
 
-    const embedding = await embedRagDocument(chunk.title, chunk.content);
+    if (chunk.source_type === "khowar_lexicon") {
+      const waitMs = Math.max(0, nextKhowarEmbeddingAt - Date.now());
+      if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+      nextKhowarEmbeddingAt = Date.now() + getKhowarEmbeddingIntervalMs(chunk);
+    }
+
+    let embedding: number[];
+    try {
+      embedding = await embedRagDocument(chunk.title, chunk.content);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "unknown error";
+      throw new Error(`Could not embed ${chunk.source_type}:${chunk.source_id} chunk ${chunk.chunk_index}: ${reason}`);
+    }
     if (embedding.length !== GEMINI_EMBEDDING_DIMENSIONS) {
       throw new Error(`Gemini returned an unexpected embedding dimension for ${chunk.source_type}:${chunk.source_id}.`);
     }
@@ -205,7 +224,7 @@ function toPlaceDocument(row: PlaceRow): IndexDocument {
     title: row.name,
     content: details.join("\n"),
     source_name: row.source,
-    source_url: null,
+    source_url: row.source_url ?? null,
     metadata: { category: row.category, latitude: row.latitude, longitude: row.longitude, opening_time: row.opening_time, closing_time: row.closing_time },
   };
 }
@@ -268,41 +287,75 @@ function toKhowarLexiconDocuments(rows: KhowarLexiconRow[]): IndexDocument[] {
     groups.set(key, [...(groups.get(key) ?? []), row]);
   }
 
-  return Array.from(groups.values()).map((group) => {
+  return Array.from(groups.values()).flatMap((unsortedGroup) => {
+    const group = [...unsortedGroup].sort((left, right) => left.record_index - right.record_index);
     const first = group[0];
     const kind = first.record_type === "letter" ? "letters" : "word-list entries";
-    return {
-      source_type: "khowar_lexicon",
-      source_id: first.id,
-      title: `Khowar ${kind}`,
-      content: [
-        `Khowar ${kind} from ${first.source_name}.`,
-        "This source contains lexical/script data only; it provides no translations, definitions, or grammar explanations.",
-        ...group.map((row) => `${row.record_index + 1}. ${row.entry}`),
-      ].join("\n"),
-      source_name: first.source_name,
-      source_url: first.source_url,
-      metadata: {
-        dataset_id: first.dataset_id,
-        record_type: first.record_type,
-        record_count: group.length,
-        license: first.license,
-        attribution: first.attribution,
-        record_index_start: first.record_index,
-        record_index_end: group[group.length - 1].record_index,
-      },
-      source_record_count: group.length,
+    const header = [
+      `Khowar ${kind} from ${first.source_name}.`,
+      "This source contains lexical/script data only; it provides no translations, definitions, or grammar explanations.",
+    ];
+    const headerLength = header.join("\n").length;
+    const documents: IndexDocument[] = [];
+    let batch: KhowarLexiconRow[] = [];
+    let batchLength = headerLength;
+
+    const flushBatch = () => {
+      if (batch.length === 0) return;
+      const batchFirst = batch[0];
+      const batchLast = batch[batch.length - 1];
+      documents.push({
+        source_type: "khowar_lexicon",
+        source_id: first.id,
+        title: `Khowar ${kind}`,
+        content: [...header, ...batch.map((row) => `${row.record_index + 1}. ${row.entry}`)].join("\n"),
+        source_name: first.source_name,
+        source_url: first.source_url,
+        metadata: {
+          dataset_id: first.dataset_id,
+          record_type: first.record_type,
+          record_count: batch.length,
+          license: first.license,
+          attribution: first.attribution,
+          record_index_start: batchFirst.record_index,
+          record_index_end: batchLast.record_index,
+        },
+        source_record_count: batch.length,
+        chunk_index_offset: documents.length,
+        pre_chunked: true,
+      });
+      batch = [];
+      batchLength = headerLength;
     };
+
+    for (const row of group) {
+      const line = `${row.record_index + 1}. ${row.entry}`;
+      const nextLength = batchLength + 1 + line.length;
+      if (batch.length > 0 && (batch.length >= KHOWAR_BATCH_MAX_RECORDS || nextLength > KHOWAR_BATCH_MAX_CHARACTERS)) {
+        flushBatch();
+      }
+      batch.push(row);
+      batchLength += 1 + line.length;
+    }
+    flushBatch();
+    return documents;
   });
 }
 
 function toIndexChunks(document: IndexDocument): IndexChunk[] {
-  return splitIntoChunks(document.content).map((content, chunkIndex) => ({
+  const contentChunks = document.pre_chunked ? [document.content] : splitIntoChunks(document.content);
+  return contentChunks.map((content, chunkIndex) => ({
     ...document,
-    chunk_index: chunkIndex,
+    chunk_index: (document.chunk_index_offset ?? 0) + chunkIndex,
     content,
-    fingerprint: createFingerprint(document, chunkIndex, content),
+    fingerprint: createFingerprint(document, (document.chunk_index_offset ?? 0) + chunkIndex, content),
   }));
+}
+
+function getKhowarEmbeddingIntervalMs(chunk: IndexChunk): number {
+  const requestText = `task: search result | title: ${chunk.title.trim() || "none"} | text: ${chunk.content.trim()}`;
+  const estimatedTokens = Math.ceil(requestText.length * KHOWAR_TOKENS_PER_CHARACTER_ESTIMATE);
+  return Math.ceil((estimatedTokens / KHOWAR_TARGET_TOKENS_PER_MINUTE) * 60_000);
 }
 
 function splitIntoChunks(input: string): string[] {

@@ -15,6 +15,7 @@ export type Database = {
           opening_time: string | null;
           closing_time: string | null;
           source: string | null;
+          source_url?: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["places"]["Row"], "id" | "created_at"> & {
@@ -128,6 +129,34 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["khowar_lexicon"]["Insert"]>;
+        Relationships: [];
+      };
+      khowar_glossary: {
+        Row: {
+          id: string;
+          source_entry_id: string;
+          headword: string;
+          english_gloss: string | null;
+          english_definition: string | null;
+          cultural_notes: string | null;
+          examples: Json;
+          source_author: string;
+          source_title: string;
+          publication_year: number;
+          source_url: string;
+          source_doi: string;
+          source_locator: string | null;
+          license: string;
+          attribution: string;
+          project_permission: string;
+          provenance: Json;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["khowar_glossary"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["khowar_glossary"]["Insert"]>;
         Relationships: [];
       };
       knowledge_chunks: {
