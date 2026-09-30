@@ -7,14 +7,46 @@ const DICTIONARY_START_PAGE = 14;
 const POS = "(?:n|adj|adv|vtr|vintr|vcs|pro|conjunction|interjection|postposition|noun|verb transitive|verb intransitive)";
 const CONFIRMED_COLUMN_RESOLUTIONS = new Map<string, { column: 1 | 2; headword?: string; candidateHeadword?: string; split?: number }>([
   ["18:24", { column: 2, headword: "ka", candidateHeadword: "ar korík", split: 61 }],
-  ["18:57", { column: 1 }],
-  ["68:34", { column: 1 }],
-  ["68:44", { column: 1 }],
-  ["14:52", { column: 2, headword: "af" }],
-  ["17:57", { column: 2, headword: "-ánu" }],
-  ["28:52", { column: 2, headword: "bik2" }],
-  ["30:55", { column: 2, headword: "boγmá" }],
-  ["31:60", { column: 2, headword: "boót" }],
+  ["18:57", { column: 1, headword: "aqá" }],
+  ["68:34", { column: 1, headword: "hínǰu" }],
+  ["68:44", { column: 1, headword: "hókum" }],
+  ["14:52", { column: 2, headword: "af", split: 63 }],
+  ["17:57", { column: 2, headword: "-ánu", split: 64 }],
+  ["28:52", { column: 2, headword: "bik2", split: 64 }],
+  ["30:55", { column: 2, headword: "boγmá", split: 66 }],
+  ["31:60", { column: 2, headword: "boót", split: 64 }],
+  ["46:53", { column: 2, headword: "daržát", split: 64 }],
+  ["47:61", { column: 2, headword: "dexdéx", split: 65 }],
+  ["48:59", { column: 2, headword: "doík", split: 65 }],
+  ["51:64", { column: 2, headword: "dunyá", split: 64 }],
+  ["55:65", { column: 2, headword: "firíb", split: 68 }],
+  ["74:58", { column: 2, headword: "kargín", split: 63 }],
+  ["79:56", { column: 2, headword: "koc̣", split: 69 }],
+  ["91:54", { column: 2, headword: "-má", split: 63 }],
+  ["97:55", { column: 2, headword: "mox", split: 63 }],
+  ["99:56", { column: 2, headword: "múṭu", split: 62 }],
+  ["102:64", { column: 2, headword: "naṭíheɫ", split: 65 }],
+  ["105:57", { column: 2, headword: "nokhí", split: 65 }],
+  ["108:58", { column: 2, headword: "pálmu", split: 62 }],
+  ["114:58", { column: 2, headword: "pontík", split: 67 }],
+  ["120:64", { column: 2, headword: "phóti", split: 64 }],
+  ["121:61", { column: 2, headword: "phuṣ", split: 68 }],
+  ["123:57", { column: 2, headword: "qop dik", split: 64 }],
+  ["130:65", { column: 2, headword: "saʋá", split: 69 }],
+  ["134:62", { column: 2, headword: "šahín", split: 64 }],
+  ["136:58", { column: 2, headword: "šetú", split: 64 }],
+  ["137:75", { column: 2, headword: "širístu", split: 67 }],
+  ["139:61", { column: 2, headword: "šuṭánsk", split: 64 }],
+  ["144:57", { column: 2, headword: "tay", split: 67 }],
+  ["145:65", { column: 2, headword: "ton", split: 68 }],
+  ["149:65", { column: 2, headword: "thundást", split: 70 }],
+  ["150:61", { column: 2, headword: "tsirirí", split: 65 }],
+  ["151:61", { column: 2, headword: "ṭareék", split: 73 }],
+  ["153:54", { column: 2, headword: "ṭhongí", split: 65 }],
+  ["161:60", { column: 2, headword: "ʋrenǰík", split: 67 }],
+  ["162:68", { column: 2, headword: "xap", split: 66 }],
+  ["167:52", { column: 2, headword: "dreék", split: 69 }],
+  ["172:59", { column: 2, headword: "ẓukúni", split: 66 }],
 ]);
 
 export type BashirFragment = {
@@ -187,7 +219,6 @@ export function parseBashirFragments(fragments: BashirFragment[]): BashirParseRe
     entry.originalChunkFilenames = filenames;
     entry.rawSourceExcerpt = entryLines.map((line) => line.text).join("\n");
     entry.ambiguous ||= entryLines.some((line) => line.layoutAmbiguous);
-    entry.ambiguous ||= crossColumnContinuationCandidate !== null;
     entry.provenance = {
       source: "Elena Bashir, A Khowar-English glossary [HL Archive 12]",
       page: entry.page,
@@ -425,7 +456,6 @@ function getSourceLineSpans(lines: SourceLine[]) {
 }
 
 function findCrossColumnContinuation(entry: BashirEntry, entryLines: SourceLine[], sourceLines: SourceLine[]) {
-  if (CONFIRMED_COLUMN_RESOLUTIONS.get(`${entry.pdfPage}:${entry.sourceLineStart}`)?.column === entry.column) return null;
   if (entry.column !== 2) return null;
   const pages = unique(entryLines.map((line) => line.page));
   const finalPage = pages.at(-1);

@@ -19,11 +19,11 @@ const urduFont = Noto_Naskh_Arabic({
 
 export const metadata: Metadata = {
   title: {
-    default: "CHAYTHRAAR | One intelligent place for Chitral",
+    default: "CHAYTHRAAR | Digital Cultural Archive of Chitral",
     template: "%s | CHAYTHRAAR",
   },
   description:
-    "A unified digital platform for exploring, understanding, and staying connected to Chitral.",
+    "Explore cultural knowledge, history, language, heritage, places, and stories from Chitral.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -33,5 +33,5 @@ export function NewsLanguageView({ headline, summary, originalTitle, originalSum
 }
 
 function LanguageButton({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
-  return <button type="button" aria-pressed={active} onClick={onClick} className={active ? "rounded-full bg-[var(--color-ink)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] focus-visible:ring-offset-1" : "rounded-full px-3 py-1.5 text-xs font-semibold text-[var(--color-slate)] transition-colors hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] focus-visible:ring-offset-1"}>{label}</button>;
+  return <button type="button" aria-pressed={active} onClick={onClick} className={active ? "min-h-11 rounded-md bg-[var(--color-ink)] px-3 text-xs font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] focus-visible:ring-offset-1" : "min-h-11 rounded-md px-3 text-xs font-semibold text-[var(--color-slate)] transition-colors hover:text-[var(--color-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] focus-visible:ring-offset-1"}>{label}</button>;
 }

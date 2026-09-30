@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import type { Database, Json } from "@/lib/supabase/database.types";
 import { createRagSupabaseClient } from "@/lib/supabase/rag";
 import { embedRagDocument, GEMINI_EMBEDDING_DIMENSIONS, GEMINI_EMBEDDING_MODEL } from "@/lib/embeddings/gemini";
+import { embedVoyageDocuments, VOYAGE_EMBEDDING_DIMENSIONS, VOYAGE_EMBEDDING_MODEL } from "@/lib/embeddings/voyage";
 
 config({ path: resolve(process.cwd(), ".env.local") });
 
@@ -16,7 +17,8 @@ const KHOWAR_BATCH_MAX_CHARACTERS = 1200;
 const KHOWAR_TOKENS_PER_CHARACTER_ESTIMATE = 0.85;
 const KHOWAR_TARGET_TOKENS_PER_MINUTE = 20000;
 const INDEXER_ID = "chaythraar-rag-index-v1";
-const INDEXABLE_SOURCE_TYPES = new Set<KnowledgeSourceType>(["encyclopedia", "news", "safety", "place", "translation", "khowar_lexicon"]);
+const INDEXABLE_SOURCE_TYPES = new Set<KnowledgeSourceType>(["encyclopedia", "news", "safety", "place", "translation", "khowar_lexicon", "khowar_glossary"]);
+const KNOWLEDGE_CHUNK_SOURCE_TYPES = new Set<KnowledgeSourceType>(["encyclopedia", "news", "safety", "place", "translation", "khowar_lexicon"]);
 
 type EncyclopediaRow = Pick<Database["public"]["Tables"]["encyclopedia"]["Row"], "id" | "title" | "category" | "content" | "image_url" | "source" | "source_url" | "created_at">;
 type PlaceRow = Pick<Database["public"]["Tables"]["places"]["Row"], "id" | "name" | "description" | "category" | "latitude" | "longitude" | "opening_time" | "closing_time" | "source" | "source_url" | "created_at">;
@@ -24,6 +26,9 @@ type NewsRow = Pick<Database["public"]["Tables"]["news"]["Row"], "id" | "title" 
 type HazardRow = Pick<Database["public"]["Tables"]["hazards"]["Row"], "id" | "type" | "title" | "description" | "latitude" | "longitude" | "severity" | "status" | "source" | "source_name" | "source_url" | "source_type" | "location_name" | "reported_at" | "issued_at" | "expires_at">;
 type TranslationRow = Pick<Database["public"]["Tables"]["translations"]["Row"], "id" | "khowar" | "urdu" | "english" | "example" | "verified" | "source">;
 type KhowarLexiconRow = Pick<Database["public"]["Tables"]["khowar_lexicon"]["Row"], "id" | "dataset_id" | "record_type" | "record_index" | "entry" | "source_name" | "source_url" | "license" | "attribution">;
+type KhowarGlossaryRow = Pick<Database["public"]["Tables"]["khowar_glossary"]["Row"], "id" | "source_entry_id" | "headword" | "english_gloss" | "english_definition" | "cultural_notes" | "examples" | "source_author" | "source_title" | "publication_year" | "source_url" | "source_doi" | "source_locator" | "license" | "attribution" | "project_permission" | "provenance">;
+type KhowarGlossaryChunkRow = Pick<Database["public"]["Tables"]["khowar_glossary_chunks"]["Row"], "source_id" | "metadata">;
+type KhowarGlossaryChunkInsert = Database["public"]["Tables"]["khowar_glossary_chunks"]["Insert"];
 type ExistingChunk = Pick<Database["public"]["Tables"]["knowledge_chunks"]["Row"], "id" | "source_type" | "source_id" | "chunk_index" | "metadata">;
 type ChunkInsert = Database["public"]["Tables"]["knowledge_chunks"]["Insert"];
 type KnowledgeSourceType = Database["public"]["Tables"]["knowledge_chunks"]["Row"]["source_type"];
@@ -56,29 +61,44 @@ type IndexReport = {
 };
 
 async function main() {
+  const sourceTypeFilter = parseSourceTypeFilter(process.argv.slice(2));
   const supabase = createRagSupabaseClient();
+  if (sourceTypeFilter === "khowar_glossary") {
+    await indexKhowarGlossary(supabase);
+    return;
+  }
+
+  const loadSource = <Row>(
+    sourceType: KnowledgeSourceType,
+    fetchPage: (from: number, to: number) => PromiseLike<{ data: Row[] | null; error: { message: string } | null }>,
+  ) => sourceTypeFilter && sourceTypeFilter !== sourceType
+    ? Promise.resolve([] as Row[])
+    : loadPages(fetchPage);
   const [encyclopedia, places, news, hazards, translations, khowarLexicon, existingChunks] = await Promise.all([
-    loadPages<EncyclopediaRow>((from, to) => supabase.from("encyclopedia")
+    loadSource<EncyclopediaRow>("encyclopedia", (from, to) => supabase.from("encyclopedia")
       .select("id, title, category, content, image_url, source, source_url, created_at")
       .order("id").range(from, to)),
-    loadPages<PlaceRow>((from, to) => supabase.from("places")
+    loadSource<PlaceRow>("place", (from, to) => supabase.from("places")
       .select("id, name, description, category, latitude, longitude, opening_time, closing_time, source, source_url, created_at")
       .order("id").range(from, to)),
-    loadPages<NewsRow>((from, to) => supabase.from("news")
+    loadSource<NewsRow>("news", (from, to) => supabase.from("news")
       .select("id, title, summary, headline, summary_short, original_title, original_language, source, source_url, published_at, category")
       .order("id").range(from, to)),
-    loadPages<HazardRow>((from, to) => supabase.from("hazards")
+    loadSource<HazardRow>("safety", (from, to) => supabase.from("hazards")
       .select("id, type, title, description, latitude, longitude, severity, status, source, source_name, source_url, source_type, location_name, reported_at, issued_at, expires_at")
       .order("id").range(from, to)),
-    loadPages<TranslationRow>((from, to) => supabase.from("translations")
+    loadSource<TranslationRow>("translation", (from, to) => supabase.from("translations")
       .select("id, khowar, urdu, english, example, verified, source")
       .eq("verified", true).order("id").range(from, to)),
-    loadPages<KhowarLexiconRow>((from, to) => supabase.from("khowar_lexicon")
+    loadSource<KhowarLexiconRow>("khowar_lexicon", (from, to) => supabase.from("khowar_lexicon")
       .select("id, dataset_id, record_type, record_index, entry, source_name, source_url, license, attribution")
       .order("dataset_id").order("record_type").order("record_index").range(from, to)),
-    loadPages<ExistingChunk>((from, to) => supabase.from("knowledge_chunks")
-      .select("id, source_type, source_id, chunk_index, metadata")
-      .order("id").range(from, to)),
+    loadPages<ExistingChunk>((from, to) => {
+      const baseQuery = supabase.from("knowledge_chunks")
+        .select("id, source_type, source_id, chunk_index, metadata");
+      const query = sourceTypeFilter ? baseQuery.eq("source_type", sourceTypeFilter) : baseQuery;
+      return query.order("id").range(from, to);
+    }),
   ]);
 
   const documents = [
@@ -163,7 +183,8 @@ async function main() {
 
   const obsoleteChunks = existingChunks.filter((chunk) => {
     const ownership = readIndexMetadata(chunk.metadata);
-    return INDEXABLE_SOURCE_TYPES.has(chunk.source_type)
+    return KNOWLEDGE_CHUNK_SOURCE_TYPES.has(chunk.source_type)
+      && (!sourceTypeFilter || chunk.source_type === sourceTypeFilter)
       && ownership?.owner === INDEXER_ID
       && !desiredKeys.has(chunkKey(chunk));
   });
@@ -182,6 +203,20 @@ async function main() {
     console.log(`${report.source_type}: records=${report.source_records}, chunks=${report.chunks}, unchanged=${report.unchanged}, embedded=${report.embedded}, obsolete_removed=${report.obsolete_removed}`);
   }
   console.log(`total: records=${reports.reduce((sum, item) => sum + item.source_records, 0)}, chunks=${chunks.length}, unchanged=${reports.reduce((sum, item) => sum + item.unchanged, 0)}, embedded=${rowsToWrite.length}, obsolete_removed=${obsoleteIds.length}`);
+
+  if (!sourceTypeFilter) await indexKhowarGlossary(supabase);
+}
+
+function parseSourceTypeFilter(args: string[]): KnowledgeSourceType | null {
+  const optionIndexes = args.flatMap((argument, index) => argument === "--source-type" ? [index] : []);
+  if (optionIndexes.length === 0) return null;
+  if (optionIndexes.length > 1) throw new Error("Pass --source-type only once.");
+
+  const sourceType = args[optionIndexes[0] + 1];
+  if (!sourceType || !INDEXABLE_SOURCE_TYPES.has(sourceType as KnowledgeSourceType)) {
+    throw new Error(`--source-type must be one of: ${[...INDEXABLE_SOURCE_TYPES].join(", ")}.`);
+  }
+  return sourceType as KnowledgeSourceType;
 }
 
 async function loadPages<Row>(
@@ -278,6 +313,174 @@ function toTranslationDocument(row: TranslationRow): IndexDocument {
     source_url: null,
     metadata: { verified: true },
   };
+}
+
+type KhowarGlossaryDocument = {
+  source_id: string;
+  headword: string;
+  english_gloss: string;
+  content: string;
+  source_name: string | null;
+  source_url: string | null;
+  metadata: Json;
+};
+
+function toKhowarGlossaryDocument(row: KhowarGlossaryRow): KhowarGlossaryDocument {
+  const title = `Bashir glossary: ${row.headword}`;
+  const citation = [
+    `${row.source_author}, ${row.source_title} (${row.publication_year})`,
+    row.source_locator,
+    `DOI: ${row.source_doi}`,
+  ].filter(Boolean).join(", ");
+  const partOfSpeech = getProvenanceStringArray(row.provenance, "partOfSpeech");
+  const rawSourceExcerpt = getProvenanceString(row.provenance, "rawSourceExcerpt");
+  const examples = Array.isArray(row.examples) && row.examples.length > 0 ? JSON.stringify(row.examples) : null;
+  const content = [
+    title,
+    `Source entry ID: ${row.source_entry_id}`,
+    `Headword: ${row.headword}`,
+    row.english_gloss ? `English gloss: ${row.english_gloss}` : null,
+    row.english_definition ? `English definition: ${row.english_definition}` : null,
+    row.cultural_notes ? `Cultural notes: ${row.cultural_notes}` : null,
+    partOfSpeech.length > 0 ? `Part of speech: ${partOfSpeech.join(", ")}` : null,
+    examples ? `Examples: ${examples}` : null,
+    rawSourceExcerpt ? `Source excerpt: ${rawSourceExcerpt}` : null,
+    `Citation: ${citation}`,
+  ].filter(Boolean).join("\n");
+
+  return {
+    source_id: row.id,
+    headword: row.headword,
+    english_gloss: row.english_gloss ?? row.english_definition ?? "",
+    content,
+    source_name: row.source_author,
+    source_url: row.source_url,
+    metadata: {
+      title,
+      source_entry_id: row.source_entry_id,
+      headword: row.headword,
+      english_gloss: row.english_gloss,
+      english_definition: row.english_definition,
+      cultural_notes: row.cultural_notes,
+      examples: row.examples,
+      source_author: row.source_author,
+      source_title: row.source_title,
+      publication_year: row.publication_year,
+      source_url: row.source_url,
+      source_doi: row.source_doi,
+      source_locator: row.source_locator,
+      license: row.license,
+      attribution: row.attribution,
+      project_permission: row.project_permission,
+      provenance: row.provenance,
+    },
+  };
+}
+
+async function indexKhowarGlossary(supabase: ReturnType<typeof createRagSupabaseClient>): Promise<void> {
+  const [sourceRows, existingRows] = await Promise.all([
+    loadPages<KhowarGlossaryRow>((from, to) => supabase.from("khowar_glossary")
+      .select("id, source_entry_id, headword, english_gloss, english_definition, cultural_notes, examples, source_author, source_title, publication_year, source_url, source_doi, source_locator, license, attribution, project_permission, provenance")
+      .order("id").range(from, to)),
+    loadPages<KhowarGlossaryChunkRow>((from, to) => supabase.from("khowar_glossary_chunks")
+      .select("source_id, metadata")
+      .order("source_id").range(from, to)),
+  ]);
+
+  const existingBySourceId = new Map(existingRows.map((row) => [row.source_id, row]));
+  const unchangedSourceIds = new Set<string>();
+  const pending: Array<{ document: KhowarGlossaryDocument; fingerprint: string }> = [];
+  let inserted = 0;
+  let updated = 0;
+
+  for (const row of sourceRows) {
+    const document = toKhowarGlossaryDocument(row);
+    const fingerprint = createKhowarGlossaryFingerprint(document);
+    const existing = existingBySourceId.get(document.source_id);
+    const existingIndex = existing ? readIndexMetadata(existing.metadata) : null;
+    if (existingIndex?.owner === INDEXER_ID && existingIndex.fingerprint === fingerprint) {
+      unchangedSourceIds.add(document.source_id);
+      continue;
+    }
+
+    if (existing) updated += 1;
+    else inserted += 1;
+    pending.push({ document, fingerprint });
+  }
+
+  const embeddings = await embedVoyageDocuments(pending.map(({ document }) => document.content));
+  if (embeddings.length !== pending.length) {
+    throw new Error(`Voyage returned ${embeddings.length} embeddings for ${pending.length} glossary entries.`);
+  }
+
+  const rowsToUpsert: KhowarGlossaryChunkInsert[] = pending.map(({ document, fingerprint }, index) => {
+    const embedding = embeddings[index];
+    if (!embedding || embedding.length !== VOYAGE_EMBEDDING_DIMENSIONS) {
+      throw new Error(`Voyage returned an invalid vector for glossary source ${document.source_id}.`);
+    }
+    return {
+      source_id: document.source_id,
+      headword: document.headword,
+      english_gloss: document.english_gloss,
+      content: document.content,
+      source_name: document.source_name,
+      source_url: document.source_url,
+      metadata: withVoyageIndexMetadata(document.metadata, fingerprint),
+      embedding: `[${embedding.join(",")}]`,
+      updated_at: new Date().toISOString(),
+    };
+  });
+
+  for (let offset = 0; offset < rowsToUpsert.length; offset += UPSERT_BATCH_SIZE) {
+    const batch = rowsToUpsert.slice(offset, offset + UPSERT_BATCH_SIZE);
+    const { error } = await supabase.from("khowar_glossary_chunks").upsert(batch, { onConflict: "source_id" });
+    if (error) throw new Error(`Could not store Voyage Khowar glossary vectors: ${error.message}`);
+  }
+
+  const sourceIds = new Set(sourceRows.map((row) => row.id));
+  const obsoleteRows = existingRows.filter((row) => !sourceIds.has(row.source_id));
+  for (let offset = 0; offset < obsoleteRows.length; offset += UPSERT_BATCH_SIZE) {
+    const sourceIdsToDelete = obsoleteRows.slice(offset, offset + UPSERT_BATCH_SIZE).map((row) => row.source_id);
+    const { error } = await supabase.from("khowar_glossary_chunks").delete().in("source_id", sourceIdsToDelete);
+    if (error) throw new Error(`Could not remove obsolete Voyage Khowar glossary vectors: ${error.message}`);
+  }
+
+  console.log(`khowar_glossary: inserted=${inserted}, updated=${updated}, unchanged=${unchangedSourceIds.size}, obsolete=${obsoleteRows.length}`);
+}
+
+function createKhowarGlossaryFingerprint(document: KhowarGlossaryDocument): string {
+  const stableValue = JSON.stringify({
+    indexer: INDEXER_ID,
+    model: VOYAGE_EMBEDDING_MODEL,
+    source_id: document.source_id,
+    headword: document.headword,
+    english_gloss: document.english_gloss,
+    content: document.content,
+    source_name: document.source_name,
+    source_url: document.source_url,
+    metadata: document.metadata,
+  });
+  return createHash("sha256").update(stableValue).digest("hex");
+}
+
+function withVoyageIndexMetadata(metadata: Json, fingerprint: string): Json {
+  const sourceMetadata = metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata : {};
+  return {
+    ...sourceMetadata,
+    _index: { owner: INDEXER_ID, model: VOYAGE_EMBEDDING_MODEL, fingerprint },
+  };
+}
+
+function getProvenanceString(provenance: Json, key: string): string | null {
+  if (!provenance || typeof provenance !== "object" || Array.isArray(provenance)) return null;
+  const value = provenance[key];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function getProvenanceStringArray(provenance: Json, key: string): string[] {
+  if (!provenance || typeof provenance !== "object" || Array.isArray(provenance)) return [];
+  const value = provenance[key];
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
 function toKhowarLexiconDocuments(rows: KhowarLexiconRow[]): IndexDocument[] {

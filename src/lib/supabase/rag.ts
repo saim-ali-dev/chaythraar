@@ -2,9 +2,11 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { GEMINI_EMBEDDING_DIMENSIONS } from "@/lib/embeddings/gemini";
+import { VOYAGE_EMBEDDING_DIMENSIONS } from "@/lib/embeddings/voyage";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type KnowledgeChunkMatch = Database["public"]["Functions"]["match_knowledge_chunks"]["Returns"][number];
+export type KhowarGlossaryChunkMatch = Database["public"]["Functions"]["match_khowar_glossary_chunks"]["Returns"][number];
 export type KnowledgeSourceType = Database["public"]["Tables"]["knowledge_chunks"]["Row"]["source_type"];
 
 type KnowledgeMatchOptions = {
@@ -42,5 +44,26 @@ export async function matchKnowledgeChunks(
   });
 
   if (error) throw new Error(`RAG similarity search failed: ${error.message}`);
+  return data ?? [];
+}
+
+export async function matchKhowarGlossaryChunks(
+  queryEmbedding: number[],
+  queryTerms: string[],
+  matchCount = 8,
+): Promise<KhowarGlossaryChunkMatch[]> {
+  if (queryEmbedding.length !== VOYAGE_EMBEDDING_DIMENSIONS
+    || !queryEmbedding.every((value) => Number.isFinite(value))) {
+    throw new Error(`Khowar glossary query embedding must contain ${VOYAGE_EMBEDDING_DIMENSIONS} finite values.`);
+  }
+
+  const supabase = createRagSupabaseClient();
+  const { data, error } = await supabase.rpc("match_khowar_glossary_chunks", {
+    query_embedding: `[${queryEmbedding.join(",")}]`,
+    query_terms: queryTerms,
+    match_count: matchCount,
+  });
+
+  if (error) throw new Error(`Khowar glossary retrieval failed: ${error.message}`);
   return data ?? [];
 }

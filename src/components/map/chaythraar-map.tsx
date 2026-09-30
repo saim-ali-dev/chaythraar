@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Layers3, LoaderCircle, MapPin, ShieldAlert, TreePine } from "lucide-react";
+import { Building2, Landmark, Layers3, LoaderCircle, MapPin, Mountain, ShieldAlert, TreePine, Waves, type LucideIcon } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -22,6 +24,16 @@ const ACTIVE_LAYERS: Record<MapLayer, boolean> = {
   heritage: true,
   safety: true,
 };
+
+const PLACE_MARKER_GROUPS = [
+  { key: "heritage", label: "Heritage and cultural sites", icon: Landmark, color: "#8f472d" },
+  { key: "park", label: "National parks", icon: TreePine, color: "#35634c" },
+  { key: "nature", label: "Natural attractions", icon: Waves, color: "#526572" },
+  { key: "landscape", label: "Mountains, passes, and valleys", icon: Mountain, color: "#59633e" },
+  { key: "settlement", label: "Towns and cultural regions", icon: Building2, color: "#1c2b35" },
+  { key: "other", label: "Other places", icon: MapPin, color: "#9d5437" },
+] as const;
+const SAFETY_MARKER_GROUP = { key: "safety", label: "Safety events", icon: ShieldAlert, color: "#842f28" } as const;
 
 export function ChaythraarMap() {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
@@ -42,7 +54,7 @@ export function ChaythraarMap() {
       attributionControl: true,
     });
 
-    L.control.zoom({ position: "bottomright" }).addTo(map);
+    L.control.zoom({ position: "topright" }).addTo(map);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -97,48 +109,112 @@ export function ChaythraarMap() {
     if (!markerLayer) return;
     markerLayer.clearLayers();
 
-    const addMarker = (latitude: number | null, longitude: number | null, color: string, popup: HTMLElement) => {
+    const addMarker = (latitude: number | null, longitude: number | null, title: string, icon: L.DivIcon, popup: HTMLElement) => {
       if (latitude === null || longitude === null) return;
-      L.circleMarker([latitude, longitude], {
-        radius: 8,
-        color,
-        weight: 2,
-        fillColor: color,
-        fillOpacity: 0.8,
-      }).bindPopup(popup, { className: "chaythraar-map-popup" }).addTo(markerLayer);
+      const marker = L.marker([latitude, longitude], { icon, title, alt: title, keyboard: true, riseOnHover: true });
+      marker.bindPopup(popup, { className: "chaythraar-map-popup" });
+      marker.on("popupopen", () => marker.getElement()?.classList.add("is-selected"));
+      marker.on("popupclose", () => marker.getElement()?.classList.remove("is-selected"));
+      marker.addTo(markerLayer);
     };
 
     if (layers.places) {
       data.places.filter((place) => !isHeritage(place.category)).forEach((place) => {
-        addMarker(place.latitude, place.longitude, "#bd6b45", createPlacePopup(place));
+        const markerGroup = getPlaceMarkerGroup(place.category);
+        addMarker(place.latitude, place.longitude, `${place.category}: ${place.name}`, createPlaceIcon(markerGroup), createPlacePopup(place));
       });
     }
 
     if (layers.heritage) {
       data.places.filter((place) => isHeritage(place.category)).forEach((place) => {
-        addMarker(place.latitude, place.longitude, "#315c52", createPlacePopup(place));
+        const markerGroup = getPlaceMarkerGroup(place.category);
+        addMarker(place.latitude, place.longitude, `${place.category}: ${place.name}`, createPlaceIcon(markerGroup), createPlacePopup(place));
       });
     }
 
     if (layers.safety) {
       data.hazards.forEach((hazard) => {
-        addMarker(hazard.latitude, hazard.longitude, "#9f3d31", createSafetyPopup(hazard));
+        const title = `${SAFETY_MARKER_GROUP.label}: ${hazard.title ?? hazard.type}`;
+        addMarker(hazard.latitude, hazard.longitude, title, createSafetyIcon(), createSafetyPopup(hazard));
       });
     }
   }, [data, layers]);
 
-  return <div className="relative overflow-hidden rounded-2xl border border-[var(--color-line)] bg-[var(--color-sand)] shadow-[0_24px_80px_rgba(36,48,45,0.12)]"><div className="absolute left-4 top-4 z-[1000] w-[calc(100%-2rem)] max-w-xs rounded-xl border border-white/70 bg-[rgba(255,252,247,0.94)] p-3 shadow-lg backdrop-blur sm:left-6 sm:top-6 sm:w-auto"><div className="flex items-center gap-2"><Layers3 className="size-4 text-[var(--color-copper)]" /><span className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--color-ink)]">Map layers</span></div><div className="mt-3 flex flex-wrap gap-2">{(["places", "heritage", "safety"] as MapLayer[]).map((layer) => <LayerToggle key={layer} layer={layer} checked={layers[layer]} onChange={() => setLayers((current) => ({ ...current, [layer]: !current[layer] }))} />)}</div></div><div ref={mapElementRef} className="h-[min(72vh,680px)] min-h-[520px] w-full" />{loading && <div className="absolute inset-0 z-[900] flex items-center justify-center bg-[rgba(255,252,247,0.72)] backdrop-blur-sm"><div className="flex items-center gap-3 rounded-full bg-[var(--color-ink)] px-4 py-3 text-sm font-semibold text-white"><LoaderCircle className="size-4 animate-spin" />Loading map data</div></div>}{error && <div className="absolute bottom-4 left-4 right-4 z-[1000] rounded-xl border border-[var(--color-copper)]/30 bg-[rgba(255,252,247,0.96)] p-4 text-sm text-[var(--color-slate)] shadow-lg sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md"><p className="font-semibold text-[var(--color-ink)]">Map data unavailable</p><p className="mt-1">{error}</p></div>}{!loading && !error && data.places.length === 0 && data.hazards.length === 0 && <div className="absolute bottom-4 left-4 right-4 z-[1000] rounded-xl border border-[var(--color-line)] bg-[rgba(255,252,247,0.96)] p-4 text-sm text-[var(--color-slate)] shadow-lg sm:bottom-6 sm:left-6 sm:right-auto"><p className="font-semibold text-[var(--color-ink)]">No mapped records yet</p><p className="mt-1">Verified place and safety records will appear here as they become available.</p></div>}</div>;
+  return (
+    <div className="overflow-hidden rounded-lg border border-[var(--color-line)] bg-white">
+      <div className="flex flex-col gap-3 border-b border-[var(--color-line)] bg-[var(--color-sand)]/60 p-3 sm:px-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2"><Layers3 className="size-4 text-[var(--color-copper-deep)]" /><span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-ink)]">Map layers</span></div>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Toggle map layers">
+            {(["places", "heritage", "safety"] as MapLayer[]).map((layer) => <LayerToggle key={layer} layer={layer} checked={layers[layer]} onChange={() => setLayers((current) => ({ ...current, [layer]: !current[layer] }))} />)}
+          </div>
+        </div>
+        <details className="group/map-legend">
+          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center rounded-md border border-[var(--color-line)] bg-white px-3 text-xs font-semibold text-[var(--color-slate)] hover:border-[var(--color-line-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">Map key</summary>
+          <div className="mt-2 w-full rounded-md border border-[var(--color-line)] bg-white p-3 sm:max-w-2xl">
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {PLACE_MARKER_GROUPS.map((group) => <LegendItem key={group.key} icon={group.icon} label={group.label} color={group.color} />)}
+              <LegendItem icon={SAFETY_MARKER_GROUP.icon} label={SAFETY_MARKER_GROUP.label} color={SAFETY_MARKER_GROUP.color} />
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div className="relative">
+        <div ref={mapElementRef} className="h-[min(64vh,680px)] min-h-[380px] w-full sm:min-h-[520px]" />
+        {loading && <div className="absolute inset-0 z-[900] flex items-center justify-center bg-[rgba(255,252,247,0.72)]"><div className="flex items-center gap-3 bg-[var(--color-ink)] px-4 py-3 text-sm font-semibold text-white" role="status"><LoaderCircle className="size-4 animate-spin" />Loading map data</div></div>}
+      </div>
+      {error && <div className="border-t border-[var(--color-danger-deep)]/30 bg-[var(--color-danger-soft)] px-4 py-3 text-sm text-[var(--color-slate)]" role="alert"><p className="font-semibold text-[var(--color-danger-deep)]">Map data unavailable</p><p className="mt-1">{error}</p></div>}
+      {!loading && !error && data.places.length === 0 && data.hazards.length === 0 && <div className="border-t border-[var(--color-line)] px-4 py-3 text-sm text-[var(--color-slate)]" role="status"><p className="font-semibold text-[var(--color-ink)]">No mapped records are available.</p><p className="mt-1">Map features will appear when location-enabled place or safety records are available.</p></div>}
+    </div>
+  );
 }
 
 function LayerToggle({ layer, checked, onChange }: { layer: MapLayer; checked: boolean; onChange: () => void }) {
   const labels: Record<MapLayer, string> = { places: "Places", heritage: "Heritage", safety: "Safety" };
   const icons: Record<MapLayer, typeof MapPin> = { places: MapPin, heritage: TreePine, safety: ShieldAlert };
   const Icon = icons[layer];
-  return <button type="button" aria-pressed={checked} onClick={onChange} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-semibold transition-colors ${checked ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-white" : "border-[var(--color-line)] bg-white/70 text-[var(--color-muted)]"}`}><Icon className="size-3.5" />{labels[layer]}</button>;
+  return <button type="button" aria-pressed={checked} onClick={onChange} className={`inline-flex min-h-11 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)] ${checked ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-white" : "border-[var(--color-line)] bg-white text-[var(--color-slate)] hover:border-[var(--color-line-strong)]"}`}><Icon className="size-3.5" />{labels[layer]}</button>;
+}
+
+function LegendItem({ icon: Icon, label, color }: { icon: LucideIcon; label: string; color: string }) {
+  return <li className="flex min-h-9 items-center gap-2 text-xs text-[var(--color-slate)]"><Icon className="size-4 shrink-0" style={{ color }} aria-hidden="true" /><span>{label}</span></li>;
+}
+
+function getPlaceMarkerGroup(category: string) {
+  const normalized = category.toLowerCase();
+  if (/heritage|historic|cultural site|museum|religious|mosque/.test(normalized)) return PLACE_MARKER_GROUPS[0];
+  if (/national park/.test(normalized)) return PLACE_MARKER_GROUPS[1];
+  if (/natural attraction|lake|river/.test(normalized)) return PLACE_MARKER_GROUPS[2];
+  if (/town|cultural region/.test(normalized)) return PLACE_MARKER_GROUPS[4];
+  if (/mountain|pass|valley/.test(normalized)) return PLACE_MARKER_GROUPS[3];
+  return PLACE_MARKER_GROUPS[5];
+}
+
+function createPlaceIcon(group: (typeof PLACE_MARKER_GROUPS)[number]) {
+  const Icon = group.icon;
+  const svg = renderToStaticMarkup(createElement(Icon, { size: 16, strokeWidth: 2.2, "aria-hidden": true }));
+  return L.divIcon({
+    className: "chaythraar-marker-icon",
+    html: `<span class="chaythraar-place-marker chaythraar-place-marker--${group.key}" aria-hidden="true">${svg}</span>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 28],
+    popupAnchor: [0, -26],
+  });
+}
+
+function createSafetyIcon() {
+  const svg = renderToStaticMarkup(createElement(SAFETY_MARKER_GROUP.icon, { size: 16, strokeWidth: 2.2, "aria-hidden": true }));
+  return L.divIcon({
+    className: "chaythraar-marker-icon",
+    html: `<span class="chaythraar-place-marker chaythraar-place-marker--safety" aria-hidden="true">${svg}</span>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 28],
+    popupAnchor: [0, -26],
+  });
 }
 
 function isHeritage(category: string): boolean {
-  return /heritage|historic/i.test(category);
+  return /heritage|historic|cultural site|museum|religious|mosque/i.test(category);
 }
 
 function createPlacePopup(place: PlaceRow): HTMLElement {

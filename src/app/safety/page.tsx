@@ -1,8 +1,6 @@
-import { ShieldAlert } from "lucide-react";
 import { SafetyEventCard } from "@/components/safety/safety-event-card";
 import { AppShell } from "@/components/layout/app-shell";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 import { getSafetyEvents } from "@/lib/supabase/safety";
 import { getSafetyStatus, isSafetyEventExpired } from "@/types/safety";
 
@@ -14,13 +12,38 @@ export default async function SafetyPage() {
   const activeEvents = orderedEvents.filter((event) => getSafetyStatus(event) === "active" && !isSafetyEventExpired(event));
   const historicalEvents = orderedEvents.filter((event) => !activeEvents.includes(event));
 
-  return <AppShell><main className="mx-auto w-full max-w-7xl px-5 pb-28 pt-8 sm:px-8 lg:px-10 lg:pb-16 lg:pt-20"><section className="grid items-center gap-10 lg:grid-cols-[1fr_0.8fr]"><div className="max-w-2xl"><Badge tone="copper">Safety · Read-only foundation</Badge><h1 className="mt-6 max-w-xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] text-[var(--color-ink)] sm:text-7xl">Prepare with context, not alarm.</h1><p className="mt-6 max-w-lg text-base leading-7 text-[var(--color-slate)] sm:text-lg">A source-aware view for official advisories, news-derived events, and future community reports.</p></div><Card className="relative min-h-72 overflow-hidden bg-[var(--color-sand)] p-7 sm:min-h-96 sm:p-9"><div className="absolute -right-16 -top-16 size-52 rounded-full border border-[var(--color-copper)]/15" /><div className="absolute -bottom-24 -left-8 size-72 rounded-full border border-[var(--color-copper)]/15" /><div className="relative flex min-h-56 flex-col justify-between"><div className="flex items-center justify-between"><span className="flex size-12 items-center justify-center rounded-2xl bg-white text-[var(--color-copper)] shadow-sm"><ShieldAlert className="size-6" /></span><Badge tone={activeEvents.length > 0 ? "green" : "neutral"}>{activeEvents.length > 0 ? `${activeEvents.length} active` : "No current events"}</Badge></div><div><p className="max-w-sm text-2xl font-semibold leading-8 tracking-[-0.03em] text-[var(--color-ink)]">Useful safety information, close at hand.</p><p className="mt-4 text-sm text-[var(--color-slate)]">Source type and timing remain visible for every event.</p></div></div></Card></section>{error ? <SafetyErrorState message={error} /> : events.length === 0 ? <EmptySafetyState /> : <><section className="mt-16" aria-labelledby="active-safety-heading"><div className="flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-copper)]">Current view</p><h2 id="active-safety-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--color-ink)]">Active safety events</h2></div><span className="text-sm text-[var(--color-muted)]">{activeEvents.length} {activeEvents.length === 1 ? "event" : "events"}</span></div>{activeEvents.length > 0 ? <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{activeEvents.map((event) => <SafetyEventCard key={event.id} event={event} />)}</div> : <Card className="mt-6 p-7"><p className="text-sm leading-6 text-[var(--color-slate)]">No active events are currently available. Historical records remain available below.</p></Card>}</section>{historicalEvents.length > 0 && <section className="mt-16" aria-labelledby="historical-safety-heading"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-muted)]">History</p><h2 id="historical-safety-heading" className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[var(--color-ink)]">Historical events</h2></div><div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{historicalEvents.map((event) => <SafetyEventCard key={event.id} event={event} />)}</div></section>}</>}</main></AppShell>;
+  return (
+    <AppShell>
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl px-5 pb-28 pt-8 sm:px-8 lg:px-10 lg:pb-16 lg:pt-14">
+        <PageHeader
+          variant="operational"
+          eyebrow="Safety · Advisories and events"
+          title="Safety information"
+          description="Review available event records with severity, status, source, timing, and location shown separately."
+          actions={!error && events.length > 0 ? <div className="min-w-40 border-l-2 border-[var(--color-copper)] pl-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">Current status</p><p className="mt-1 text-lg font-semibold text-[var(--color-ink)]">{activeEvents.length === 0 ? "No active events" : `${activeEvents.length} active ${activeEvents.length === 1 ? "event" : "events"}`}</p></div> : undefined}
+        />
+        {error ? <SafetyErrorState message={error} /> : events.length === 0 ? <EmptySafetyState /> : <>
+          <section className="mt-10" aria-labelledby="active-safety-heading">
+            <div className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
+              <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-copper-deep)]">Current view</p><h2 id="active-safety-heading" className="mt-2 text-xl font-semibold text-[var(--color-ink)]">Active events</h2></div>
+              <span className="text-sm text-[var(--color-muted)]">{activeEvents.length} {activeEvents.length === 1 ? "event" : "events"}</span>
+            </div>
+            {activeEvents.length > 0 ? <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{activeEvents.map((event) => <SafetyEventCard key={event.id} event={event} />)}</div> : <p className="mt-4 border-l-2 border-[var(--color-line-strong)] py-2 pl-4 text-sm leading-6 text-[var(--color-slate)]">No active events are currently listed. Other records remain available below.</p>}
+          </section>
+          {historicalEvents.length > 0 && <section className="mt-12" aria-labelledby="historical-safety-heading">
+            <div className="border-b border-[var(--color-line-strong)] pb-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">Other records</p><h2 id="historical-safety-heading" className="mt-2 text-xl font-semibold text-[var(--color-ink)]">Past, resolved, or unverified events</h2></div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{historicalEvents.map((event) => <SafetyEventCard key={event.id} event={event} />)}</div>
+          </section>}
+        </>}
+      </main>
+    </AppShell>
+  );
 }
 
 function EmptySafetyState() {
-  return <Card className="mt-16 overflow-hidden bg-[var(--color-sand)] p-7 sm:p-10"><div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center"><span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-ink)] text-[var(--color-copper-soft)]"><ShieldAlert className="size-6" /></span><div><Badge tone="copper">No current events</Badge><h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--color-ink)]">No current safety events are available.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-slate)]">This read-only foundation is ready for source-aware safety records. No placeholder or unverified reports are shown while the table is empty.</p></div></div></Card>;
+  return <section className="mt-8 border-y border-[var(--color-line-strong)] py-7" role="status"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">Current records</p><h2 className="mt-2 text-xl font-semibold text-[var(--color-ink)]">No safety events are available.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-slate)]">No placeholder or unverified reports are shown while the event list is empty.</p></section>;
 }
 
 function SafetyErrorState({ message }: { message: string }) {
-  return <Card className="mt-16 overflow-hidden border-[var(--color-copper)]/30 bg-[var(--color-sand)] p-7 sm:p-10"><div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center"><span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-ink)] text-[var(--color-copper-soft)]"><ShieldAlert className="size-6" /></span><div><Badge tone="copper">Unable to load</Badge><h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[var(--color-ink)]">Safety events are temporarily unavailable.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-slate)]">{message}</p></div></div></Card>;
+  return <section className="mt-8 border-y border-[var(--color-danger-deep)]/30 py-7" role="alert"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-danger-deep)]">Unable to load</p><h2 className="mt-2 text-xl font-semibold text-[var(--color-ink)]">Safety events are temporarily unavailable.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-slate)]">{message}</p></section>;
 }

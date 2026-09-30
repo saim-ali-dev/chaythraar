@@ -159,10 +159,32 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["khowar_glossary"]["Insert"]>;
         Relationships: [];
       };
+      khowar_glossary_chunks: {
+        Row: {
+          id: string;
+          source_id: string;
+          headword: string;
+          english_gloss: string;
+          content: string;
+          source_name: string | null;
+          source_url: string | null;
+          metadata: Json;
+          embedding: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["khowar_glossary_chunks"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["khowar_glossary_chunks"]["Insert"]>;
+        Relationships: [];
+      };
       knowledge_chunks: {
         Row: {
           id: string;
-          source_type: "encyclopedia" | "news" | "safety" | "place" | "translation" | "khowar_lexicon";
+          source_type: "encyclopedia" | "news" | "safety" | "place" | "translation" | "khowar_lexicon" | "khowar_glossary";
           source_id: string;
           chunk_index: number;
           content: string;
@@ -200,6 +222,24 @@ export type Database = {
           source_url: string | null;
           metadata: Json;
           similarity: number;
+        }[];
+      };
+      match_khowar_glossary_chunks: {
+        Args: {
+          query_embedding: string;
+          query_terms: string[];
+          match_count?: number;
+        };
+        Returns: {
+          source_id: string;
+          headword: string;
+          english_gloss: string;
+          content: string;
+          source_name: string | null;
+          source_url: string | null;
+          metadata: Json;
+          similarity: number;
+          lexical_score: number;
         }[];
       };
     };

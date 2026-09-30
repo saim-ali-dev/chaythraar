@@ -5,16 +5,20 @@
   --foreground: #1c2b35;
   --color-ink: #1c2b35;
   --color-slate: #526572;
-  --color-muted: #71818a;
+  --color-muted: #5d6e76;
   --color-line: #dfe6e2;
   --color-line-strong: #c6d3cc;
   --color-sand: #f1ede5;
   --color-mist: #edf2ef;
-  --color-copper: #ba6845;
+  --color-copper: #9d5437;
   --color-copper-deep: #8f472d;
   --color-copper-soft: #f7e5dc;
   --color-green-soft: #e3eee7;
   --color-green-deep: #35634c;
+  --color-danger-soft: #f4e4df;
+  --color-danger-deep: #842f28;
+  --color-caution-soft: #f3ead4;
+  --color-caution-deep: #765316;
 }
 
 @theme inline {
@@ -34,6 +38,11 @@ body {
   font-family: var(--font-urdu), "Noto Naskh Arabic", "Noto Sans Arabic", serif;
 }
 
+.font-editorial {
+  font-family: Georgia, "Times New Roman", serif;
+  letter-spacing: 0;
+}
+
 ::selection {
   background: var(--color-copper-soft);
   color: var(--color-copper-deep);
@@ -46,9 +55,61 @@ input {
 }
 
 a:focus-visible,
-input:focus-visible {
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
   outline: 2px solid var(--color-copper);
   outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.intro-presenter {
+  animation: chaythraar-presenter 2.45s ease both;
+}
+
+.intro-brand {
+  animation: chaythraar-brand 2.45s ease both;
+}
+
+.intro-support {
+  animation: chaythraar-support 2.45s ease both;
+}
+
+@keyframes chaythraar-presenter {
+  0%, 30% { opacity: 0; transform: translateY(6px); }
+  38%, 54% { opacity: 1; transform: translateY(0); }
+  68%, 100% { opacity: 0; transform: translateY(-5px); }
+}
+
+@keyframes chaythraar-brand {
+  0%, 38% { opacity: 0; transform: translateY(7px) scale(0.985); }
+  46%, 82% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+
+@keyframes chaythraar-support {
+  0%, 62% { opacity: 0; transform: translateY(5px); }
+  70%, 84% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-presenter,
+  .intro-brand,
+  .intro-support {
+    animation: none;
+  }
 }
 
 .chaythraar-map-popup .leaflet-popup-content-wrapper {
@@ -86,4 +147,43 @@ input:focus-visible {
   color: var(--color-slate);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.chaythraar-place-marker {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 4px;
+  box-shadow: 0 1px 5px rgba(28, 43, 53, 0.42);
+  transform: rotate(-45deg);
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+
+.chaythraar-place-marker svg {
+  width: 16px;
+  height: 16px;
+  color: #fff;
+  transform: rotate(45deg);
+}
+
+.chaythraar-place-marker--heritage { background: #8f472d; }
+.chaythraar-place-marker--park { background: #35634c; }
+.chaythraar-place-marker--nature { background: #526572; }
+.chaythraar-place-marker--landscape { background: #59633e; }
+.chaythraar-place-marker--settlement { background: #1c2b35; }
+.chaythraar-place-marker--other { background: #9d5437; }
+.chaythraar-place-marker--safety { background: #842f28; }
+
+.chaythraar-marker-icon {
+  border: 0;
+  background: transparent;
+}
+
+.leaflet-marker-icon:hover .chaythraar-place-marker,
+.leaflet-marker-icon:focus-visible .chaythraar-place-marker,
+.leaflet-marker-icon.is-selected .chaythraar-place-marker {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-copper-deep), 0 2px 6px rgba(28, 43, 53, 0.35);
+  transform: rotate(-45deg) scale(1.08);
 }
