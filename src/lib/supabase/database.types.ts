@@ -34,6 +34,7 @@ export type Database = {
           image_url: string | null;
           source: string | null;
           source_url: string | null;
+          media_url: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["encyclopedia"]["Row"], "id" | "created_at"> & {

@@ -1,6 +1,6 @@
 -- CHAYTHRAAR Encyclopedia reviewed seed data
 --
--- This file contains the 42 research-backed entries supplied for CHAYTHRAAR.
+-- This file contains reviewed source-backed encyclopedia entries for CHAYTHRAAR.
 -- Image URLs are intentionally NULL because no verified image URLs were supplied.
 -- Review source rights and provenance before applying this file to Supabase.
 
@@ -347,4 +347,36 @@ insert into public.encyclopedia (
     NULL,
     'Directorate of Archaeology & Museums, KP',
     'https://dost.kp.gov.pk/wp-content/uploads/2026/01/Archeology_TF-Report.pdf?utm_source=chatgpt.com'
+  ),
+  (
+    'Khosh Bigim',
+    'Music',
+    'Bashonu lists Khosh Bigim in its Khowar song catalogue and credits the poem to Ali Aman Khan. The source does not identify a recording performer or date; this entry preserves the poet attribution without assigning it to a modern performance.',
+    NULL,
+    'Bashonu — Khowar song archive',
+    'https://bashonu.com/song/khosh-bigim-15'
+  ),
+  (
+    'Nano Begal',
+    'Music',
+    'Bashonu lists Nano Begal as a Khowar song and records its poet attribution as “folk song,” not an individual. This entry preserves that attribution and adds no unsupported date, performer, or historical context.',
+    NULL,
+    'Bashonu — Khowar song archive',
+    'https://bashonu.com/song/nano-begal-27'
+  ),
+  (
+    'Shab Daraz',
+    'Music',
+    'Bashonu lists Shab Daraz as a Khowar song and records its poet attribution as “folk song,” not an individual. This entry preserves that attribution and adds no unsupported date, performer, or historical context.',
+    NULL,
+    'Bashonu — Khowar song archive',
+    'https://bashonu.com/song/shab-daraz-295'
+  ),
+  (
+    'Yar-e-Man Hamin',
+    'Music',
+    'Bashonu lists this song under the title variants Yarman Hameen, Yorman Hameen, and Yademan Hameen, and attributes the poem to Baba Siyar (Mirza Muhammad Siyar). This is the source’s poet attribution; no modern performer, recording, or date is asserted.',
+    NULL,
+    'Bashonu — Khowar song archive',
+    'https://bashonu.com/song/yarman-hameen-yorman-hameen-yademan-hameen-297'
   );

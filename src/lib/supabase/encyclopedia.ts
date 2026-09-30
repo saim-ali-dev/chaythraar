@@ -6,7 +6,7 @@ export async function getEncyclopediaEntries(): Promise<EncyclopediaEntry[]> {
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase
       .from("encyclopedia")
-      .select("id, title, category, content, image_url, source, source_url, created_at")
+      .select("id, title, category, content, image_url, source, source_url, media_url, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -26,7 +26,7 @@ export async function getEncyclopediaEntryById(id: string): Promise<Encyclopedia
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase
       .from("encyclopedia")
-      .select("id, title, category, content, image_url, source, source_url, created_at")
+      .select("id, title, category, content, image_url, source, source_url, media_url, created_at")
       .eq("id", id)
       .maybeSingle();
 

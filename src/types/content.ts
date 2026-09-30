@@ -8,6 +8,7 @@ export type EncyclopediaEntry = {
   image_url: string | null;
   source: string | null;
   source_url: string | null;
+  media_url: string | null;
   created_at: string;
 };
 
