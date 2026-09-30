@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 config({ path: resolve(process.cwd(), ".env.local") });
 
 import { detectOriginalLanguage } from "@/lib/news/chitral-times";
+import { getNewsActiveWindowStart, NEWS_ACTIVE_LIMIT } from "@/lib/news/lifecycle";
 import { isNewsSummarizationConfigured, summarizeNews } from "@/lib/news/summarize-core";
 import { createNewsIngestionSupabaseClient } from "@/lib/news/supabase";
 import type { Database } from "@/lib/supabase/database.types";
@@ -20,10 +21,14 @@ type SummaryReport = {
 async function main() {
   const report: SummaryReport = { found: 0, summarized: 0, skipped: 0, failed: 0 };
   const supabase = createNewsIngestionSupabaseClient();
+  const activeWindowStart = getNewsActiveWindowStart().toISOString();
   const { data, error } = await supabase
     .from("news")
     .select("id, title, summary, source, original_title, original_language, headline, summary_short")
-    .or("headline.is.null,summary_short.is.null");
+    .gte("published_at", activeWindowStart)
+    .or("headline.is.null,summary_short.is.null")
+    .order("published_at", { ascending: false })
+    .limit(NEWS_ACTIVE_LIMIT);
 
   if (error) throw new Error(`Could not find news rows needing summaries: ${error.message}`);
 

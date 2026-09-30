@@ -3,41 +3,31 @@ import { resolve } from "node:path";
 
 config({ path: resolve(process.cwd(), ".env.local") });
 
-import { ingestChitralTimes, ingestChitralToday } from "@/lib/news/ingest";
+import { ingestAllNewsSources } from "@/lib/news/ingest";
 
 async function main() {
-  const sources = [
-    { name: "Chitral Times", ingest: ingestChitralTimes },
-    { name: "ChitralToday", ingest: ingestChitralToday },
-  ];
-  let hasErrors = false;
-
-  for (const source of sources) {
-    try {
-      const report = await source.ingest();
-      printReport(source.name, report);
-      if (report.errors.length > 0) hasErrors = true;
-    } catch (error) {
-      hasErrors = true;
-      console.error(`${source.name}`);
-      console.error(`Failed: ${error instanceof Error ? error.message : "unknown source error"}`);
-    }
-  }
-
-  if (hasErrors) process.exitCode = 1;
+  const report = await ingestAllNewsSources();
+  printReport(report);
+  if (report.errors.length > 0) process.exitCode = 1;
 }
 
-function printReport(sourceName: string, report: Awaited<ReturnType<typeof ingestChitralTimes>>) {
-  console.log(sourceName);
-  console.log(`discovered: ${report.discovered}`);
+function printReport(report: Awaited<ReturnType<typeof ingestAllNewsSources>>) {
+  console.log("News ingestion");
+  console.log(`fetched: ${report.fetched}`);
   console.log(`normalized: ${report.normalized}`);
+  console.log(`recent: ${report.recent}`);
+  console.log(`duplicates: ${report.duplicates}`);
   console.log(`new: ${report.new}`);
-  console.log(`existing: ${report.already_existing}`);
+  console.log(`updated: ${report.updated}`);
+  console.log(`unchanged: ${report.unchanged}`);
+  console.log(`selected: ${report.selected}`);
+  console.log(`not selected: ${report.not_selected}`);
   console.log(`summarized: ${report.summarized}`);
+  console.log(`reused: ${report.reused}`);
   console.log(`inserted: ${report.inserted}`);
+  console.log(`updated rows: ${report.updatedRows}`);
   console.log(`skipped: ${report.skipped}`);
   console.log(`failed: ${report.failed}`);
-  console.log(`duplicates: ${report.duplicates}`);
   console.log(`summarization failures: ${report.summarization_failed}`);
   for (const error of report.errors) console.error(`Error: ${error}`);
 }

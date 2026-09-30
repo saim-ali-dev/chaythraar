@@ -19,11 +19,18 @@ export type NewsSourceAdapter = {
 };
 
 export type NewsIngestionReport = {
+  fetched: number;
   discovered: number;
   normalized: number;
+  recent: number;
   new: number;
+  updated: number;
+  unchanged: number;
+  selected: number;
+  not_selected: number;
   already_existing: number;
   inserted: number;
+  updatedRows: number;
   skipped: number;
   failed: number;
   duplicates: number;
@@ -31,4 +38,5 @@ export type NewsIngestionReport = {
   summarized: number;
   summarization_skipped: number;
   summarization_failed: number;
+  reused: number;
 };

@@ -78,7 +78,7 @@ No seed data is included yet. Content remains local demo data until verified ing
 
 ## News Ingestion
 
-The first ingestion source is the publicly advertised Chitral Times RSS feed at `https://chitraltimes.com/feed/`. Run it manually with:
+The existing sources are the publicly advertised Chitral Times RSS feed at `https://chitraltimes.com/feed/` (up to five RSS pages) and ChitralToday at `https://chitraltoday.net/feed/`. Run the canonical combined ingestion manually with:
 
 ```bash
 npm run news:ingest
@@ -86,11 +86,15 @@ npm run news:ingest
 
 In addition to the public Supabase variables above, ingestion requires `SUPABASE_SERVICE_ROLE_KEY` in the ignored local `.env.local` file. This server-only key is required because the database has no anonymous write policy; it must never be exposed to browser code or committed.
 
-The command stores RSS metadata and a short source-provided excerpt, deduplicates by `source_url`, leaves `image_url` null, and reports discovered, normalized, inserted, skipped, duplicate, and error counts. It does not fetch full article pages or run on a schedule.
+The command fetches and normalizes both feeds, then keeps candidates with `published_at >= now - 48 hours` using a single UTC timestamp for that run. The boundary is inclusive. It deduplicates exact `(source, normalized source_url)` identities, compares title, excerpt, category, language, and publication time (ignoring whitespace-only differences), and ranks eligible candidates by newest `published_at`, then ascending `source_url` and source name for deterministic ties. No source priority or external ranking score is used. At most 10 candidates are selected across the sources.
+
+Only selected new, materially changed, or incomplete records are sent to summarization. Completed generated headlines and summaries are reused for unchanged records. Source metadata is stored even if summarization is unavailable or fails. Older rows are not deleted; the active News page reads only the inclusive 48-hour window and displays at most 10 rows. A separate History UI is not implemented.
+
+The repository has no deployment-specific scheduler configuration. Configure the deployment scheduler to invoke `npm run news:ingest` every 12 hours, wait for each run to finish before starting another, and set scheduled-job concurrency to one. Both source adapters already run sequentially inside the canonical command. There is no database unique constraint on `(source, source_url)`, so application checks cannot guarantee idempotence against arbitrary concurrent manual runs.
 
 Generated CHAYTHRAAR headlines and summaries are additive fields from `supabase/migrations/20260925010000_add_generated_news_fields.sql`. Apply that migration before running the updated ingestion or backfill command. Groq summarization is configured with server-only `GROQ_API_KEY`, `NEWS_AI_API_URL`, and `NEWS_AI_MODEL`; without those variables, ingestion stores original metadata and leaves generated fields null.
 
-After applying the migration, use `npm run news:summarize` to manually backfill rows with missing generated fields. The command is never run automatically and does not copy full source articles.
+After applying the migration, use `npm run news:summarize` to manually backfill at most the 10 newest rows in the current 48-hour window that have missing generated fields. Complete historical rows are never resummarized by the backfill. The command is not scheduled automatically and does not copy full source articles.
 
 ## Khowar Lexical Data
 
