@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 export function TopNav() {
   const pathname = usePathname();
   const primaryItems = navigationItems.filter((item) => ["/", "/explore", "/discover", "/news"].includes(item.href));
-  const secondaryItems = navigationItems.filter((item) => ["/safety", "/khowar", "/map"].includes(item.href));
+  const secondaryItems = navigationItems.filter((item) => ["/safety", "/khowar", "/map", "/music"].includes(item.href));
   const secondaryActive = secondaryItems.some((item) => item.href === pathname);
 
   return (
