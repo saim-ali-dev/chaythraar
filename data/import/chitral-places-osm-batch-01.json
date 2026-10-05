@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "name": "Chitral",
+      "category": "City",
+      "description": "The principal town of Chitral District, set in the Chitral River valley.",
+      "latitude": 35.850889,
+      "longitude": 71.7901897,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/279645187"
+    },
+    {
+      "name": "Drosh",
+      "category": "Town",
+      "description": "A town and valley in Lower Chitral on the traditional route toward Jalalabad, near the Landai Sin and Chitral rivers.",
+      "latitude": 35.5616271,
+      "longitude": 71.797564,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/279776192"
+    },
+    {
+      "name": "Mastuj",
+      "category": "Town",
+      "description": "A town in Upper Chitral, within the Mastuj valley.",
+      "latitude": 36.2769677,
+      "longitude": 72.5152762,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/279777458"
+    },
+    {
+      "name": "Buni",
+      "category": "Town",
+      "description": "A town in Upper Chitral and the district headquarters, located near Qaqlasht Meadows and Buni Zom.",
+      "latitude": 36.2700603,
+      "longitude": 72.2625054,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/747012666"
+    },
+    {
+      "name": "Korai",
+      "category": "Town",
+      "description": "A settlement in Drosh Tehsil, in the southern part of Lower Chitral.",
+      "latitude": 35.3287456,
+      "longitude": 71.6006536,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/2663049757"
+    },
+    {
+      "name": "Ayun",
+      "category": "Hamlet",
+      "description": "A valley settlement south of Chitral, near the route into the Kalash valleys.",
+      "latitude": 35.7159081,
+      "longitude": 71.77039,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/774708423"
+    },
+    {
+      "name": "Reshun",
+      "category": "Village",
+      "description": "A village in Mulkhow Tehsil, Upper Chitral.",
+      "latitude": 36.1536495,
+      "longitude": 72.0992776,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/3559355695"
+    },
+    {
+      "name": "Mulkhow",
+      "category": "Village",
+      "description": "A settlement in the Mulkhow valley of Upper Chitral.",
+      "latitude": 36.602955,
+      "longitude": 72.5417325,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/3986260098"
+    },
+    {
+      "name": "Birir",
+      "category": "Village",
+      "description": "A village in one of the Kalash valleys of southern Chitral.",
+      "latitude": 35.6430982,
+      "longitude": 71.7069458,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/3998448334"
+    },
+    {
+      "name": "Zargirandeh",
+      "category": "Town",
+      "description": "A settlement near Chitral town in Lower Chitral.",
+      "latitude": 35.8532375,
+      "longitude": 71.7866649,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4003644279"
+    },
+    {
+      "name": "Garam Chasma",
+      "category": "Town",
+      "description": "A mountain town in Lotkoh Valley, known for its hot springs.",
+      "latitude": 35.9935183,
+      "longitude": 71.5597728,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4008934454"
+    },
+    {
+      "name": "Torkhow",
+      "category": "Village",
+      "description": "A town and tehsil in Upper Chitral, with villages along the Torkhow River and a strong Khowar cultural presence.",
+      "latitude": 36.4530881,
+      "longitude": 72.4222755,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4020928567"
+    },
+    {
+      "name": "Awi (Mulkhow)",
+      "category": "Village",
+      "description": "A village in Mulkhow Tehsil, Upper Chitral.",
+      "latitude": 36.2786079,
+      "longitude": 72.310571,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4023267339"
+    },
+    {
+      "name": "Brep",
+      "category": "Village",
+      "description": "A village in the Mastuj valley of Upper Chitral.",
+      "latitude": 36.42763,
+      "longitude": 72.6609412,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4027955821"
+    },
+    {
+      "name": "Yarkhun Lusht",
+      "category": "Village",
+      "description": "A village in the Yarkhun valley of Upper Chitral.",
+      "latitude": 36.7944166,
+      "longitude": 73.0248349,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4029337368"
+    },
+    {
+      "name": "Ursoon",
+      "category": "Village",
+      "description": "A mountain village in Drosh Tehsil, Lower Chitral.",
+      "latitude": 35.4928612,
+      "longitude": 71.6991355,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/4283902642"
+    },
+    {
+      "name": "Awi (Lotkoh)",
+      "category": "Village",
+      "description": "A village in Lotkoh Tehsil, Lower Chitral.",
+      "latitude": 36.0108992,
+      "longitude": 71.7607504,
+      "source": "OpenStreetMap contributors (ODbL); boundary: Al-Hassan Associates / World Food Programme",
+      "source_url": "https://www.openstreetmap.org/node/12508829850"
+    }
+  ]
+}

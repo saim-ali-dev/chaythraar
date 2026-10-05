@@ -11,14 +11,18 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type PlaceRow = Database["public"]["Tables"]["places"]["Row"];
 type HazardRow = Database["public"]["Tables"]["hazards"]["Row"];
+type MapHazardRow = Pick<HazardRow, "id" | "type" | "title" | "description" | "latitude" | "longitude" | "severity" | "status" | "source_type" | "location_name" | "reported_at" | "issued_at" | "expires_at" | "moderation_status"> & {
+  vote_counts?: { correct: number; incorrect: number };
+};
 type MapLayer = "places" | "heritage" | "safety";
 
 type MapData = {
   places: PlaceRow[];
-  hazards: HazardRow[];
+  hazards: MapHazardRow[];
 };
 
 const CHITRAL_CENTER: L.LatLngExpression = [35.85, 71.79];
+const CHITRAL_MAP_BOUNDS: L.LatLngBoundsExpression = [[34.7, 70.2], [37.5, 74.0]];
 const ACTIVE_LAYERS: Record<MapLayer, boolean> = {
   places: true,
   heritage: true,
@@ -49,7 +53,11 @@ export function ChaythraarMap() {
 
     const map = L.map(mapElementRef.current, {
       center: CHITRAL_CENTER,
-      zoom: 10,
+      zoom: 9,
+      minZoom: 7,
+      maxZoom: 16,
+      maxBounds: CHITRAL_MAP_BOUNDS,
+      maxBoundsViscosity: 1,
       zoomControl: false,
       attributionControl: true,
     });
@@ -79,7 +87,7 @@ export function ChaythraarMap() {
       const supabase = createBrowserSupabaseClient();
       const [placesResult, hazardsResult] = await Promise.all([
         supabase.from("places").select("id, name, description, latitude, longitude, category, image_url, opening_time, closing_time, source, created_at").not("latitude", "is", null).not("longitude", "is", null),
-        supabase.from("hazards").select("id, type, title, description, latitude, longitude, severity, status, source, source_name, source_url, source_type, location_name, reported_at, issued_at, expires_at, created_at").not("latitude", "is", null).not("longitude", "is", null),
+        supabase.from("hazards").select("id, type, title, description, latitude, longitude, severity, status, source_type, location_name, reported_at, issued_at, expires_at, moderation_status").eq("moderation_status", "approved").not("latitude", "is", null).not("longitude", "is", null),
       ]);
 
       if (cancelled) return;
@@ -89,7 +97,32 @@ export function ChaythraarMap() {
         return;
       }
 
-      setData({ places: placesResult.data ?? [], hazards: hazardsResult.data ?? [] });
+      const hazards = hazardsResult.data ?? [];
+      const communityReportIds = hazards.filter((hazard) => hazard.source_type === "community").map((hazard) => hazard.id);
+      const voteCounts: Record<string, { correct: number; incorrect: number }> = {};
+      if (communityReportIds.length) {
+        try {
+          const voteCountChunks = await Promise.all(
+            Array.from({ length: Math.ceil(communityReportIds.length / 100) }, async (_, chunkIndex) => {
+              const reportIds = communityReportIds.slice(chunkIndex * 100, chunkIndex * 100 + 100);
+              const response = await fetch(`/api/safety/votes?reportIds=${reportIds.join(",")}`, { cache: "no-store" });
+              if (!response.ok) return {};
+              const body = await response.json();
+              return body.countsByReportId as Record<string, { correct: number; incorrect: number }>;
+            }),
+          );
+          for (const chunk of voteCountChunks) {
+            Object.assign(voteCounts, chunk);
+          }
+        } catch {
+        }
+      }
+
+      if (cancelled) return;
+      setData({
+        places: placesResult.data ?? [],
+        hazards: hazards.map((hazard) => ({ ...hazard, vote_counts: voteCounts[hazard.id] })),
+      });
       setLoading(false);
     }
 
@@ -135,7 +168,7 @@ export function ChaythraarMap() {
     if (layers.safety) {
       data.hazards.forEach((hazard) => {
         const title = `${SAFETY_MARKER_GROUP.label}: ${hazard.title ?? hazard.type}`;
-        addMarker(hazard.latitude, hazard.longitude, title, createSafetyIcon(), createSafetyPopup(hazard));
+        addMarker(hazard.latitude, hazard.longitude, title, createSafetyIcon(hazard.source_type === "community"), createSafetyPopup(hazard));
       });
     }
   }, [data, layers]);
@@ -202,11 +235,12 @@ function createPlaceIcon(group: (typeof PLACE_MARKER_GROUPS)[number]) {
   });
 }
 
-function createSafetyIcon() {
+function createSafetyIcon(isCommunityReport: boolean) {
   const svg = renderToStaticMarkup(createElement(SAFETY_MARKER_GROUP.icon, { size: 16, strokeWidth: 2.2, "aria-hidden": true }));
+  const markerClass = isCommunityReport ? "chaythraar-place-marker--safety-community" : "chaythraar-place-marker--safety";
   return L.divIcon({
     className: "chaythraar-marker-icon",
-    html: `<span class="chaythraar-place-marker chaythraar-place-marker--safety" aria-hidden="true">${svg}</span>`,
+    html: `<span class="chaythraar-place-marker ${markerClass}" aria-hidden="true">${svg}</span>`,
     iconSize: [32, 32],
     iconAnchor: [16, 28],
     popupAnchor: [0, -26],
@@ -225,12 +259,26 @@ function createPlacePopup(place: PlaceRow): HTMLElement {
   return content;
 }
 
-function createSafetyPopup(hazard: HazardRow): HTMLElement {
+function createSafetyPopup(hazard: MapHazardRow): HTMLElement {
   const content = document.createElement("div");
-  appendText(content, "div", "map-popup-kicker", hazard.source_type === "official" ? "Official advisory" : hazard.source_type === "news" ? "News report" : "Safety event");
+  const isCommunityReport = hazard.source_type === "community";
+  appendText(content, "div", "map-popup-kicker", isCommunityReport ? "Community safety report" : hazard.source_type === "official" ? "Official advisory" : hazard.source_type === "news" ? "News report" : "Safety event");
   appendText(content, "h3", "map-popup-title", hazard.title ?? hazard.type);
   appendText(content, "p", "map-popup-description", hazard.description);
+  if (isCommunityReport) appendText(content, "p", "map-popup-meta", "Moderation: Admin-approved");
+  appendText(content, "p", "map-popup-meta", `Severity: ${hazard.severity} · Status: ${hazard.status}`);
+  if (hazard.location_name) appendText(content, "p", "map-popup-meta", `Location: ${hazard.location_name}`);
+  const observedAt = hazard.issued_at ?? hazard.reported_at;
+  if (observedAt) appendText(content, "p", "map-popup-meta", `Observed: ${formatMapDate(observedAt)}`);
+  if (isCommunityReport && hazard.vote_counts) {
+    appendText(content, "p", "map-popup-meta", `Community feedback: ${hazard.vote_counts.correct} Correct · ${hazard.vote_counts.incorrect} Incorrect`);
+  }
   return content;
+}
+
+function formatMapDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
 }
 
 function appendText(parent: HTMLElement, tag: string, className: string, value: string) {

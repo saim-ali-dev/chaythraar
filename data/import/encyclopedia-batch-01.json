@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "title": "Chiantar Glacier",
+      "category": "Geography",
+      "content": "Encyclopaedia Iranica places the Chiantar Glacier at the head of the Yarkhun River and reports it as Chitral's longest glacier, giving a length of 32 km in that article. This is a source-era figure, not a current glacier survey.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Baroghil Pass",
+      "category": "Geography",
+      "content": "Iranica lists Baroghil among the high passes of Chitral and describes it as the route from the Chitral region toward the Wakhan Corridor. The article gives an elevation of about 3,804 m.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Dorah Pass",
+      "category": "Geography",
+      "content": "Iranica identifies Dorah as a high pass connecting the Chitral region with Badakhshan in Afghanistan and places it above 3,000 m. The article includes Dorah among the historic routes into the mountain district.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Darkot Pass",
+      "category": "Geography",
+      "content": "Iranica lists Darkot as a high pass on the route between Yasin and Chitral. The source places the pass above 3,000 m and treats it as one of several crossings linking Chitral with neighboring mountain regions.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Yarkhun and Turkho Meltwater Basins",
+      "category": "Geography",
+      "content": "Iranica describes snow and glacier melt as a primary source of irrigation water in Chitral, especially in the Yarkhun and tributary Turkho river basins. The account links the seasonal mountain water supply to cultivation in the valleys.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Irrigation Leats and Settlement in Chitral",
+      "category": "Geography",
+      "content": "Iranica explains that reliable water access shapes settlement in Chitral. It describes villages near water-distribution points, including artificial leats, and notes that irrigation works can define settlement boundaries.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Seasonal Pastoralism in Chitral",
+      "category": "Culture",
+      "content": "Iranica describes a family-based pattern in which livestock move vertically from permanent quarters to alpine pastures. The article distinguishes this seasonal movement from nomadism and notes that transhumant Gujar groups lease pasture in lower parts of the valley.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Vegetation Zones and Tree Lines of Chitral",
+      "category": "Environment",
+      "content": "Iranica describes vegetation in Chitral as varying with elevation and exposure. Its article reports a lower tree limit near 1,800 m, an upper tree line near 3,400 m, and a snowline around 5,200 m; these are reference-era estimates, not a current ecological survey.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Fruit and Nut Trees in Southern Chitral",
+      "category": "Food",
+      "content": "Iranica reports that fruit and nut trees are cultivated across southern Chitral, with the range depending on elevation and exposure. The article singles out mulberry and walnut as important foods during periods of low water; it describes conditions recorded in its source period.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "The Semi-Arid Climate of Chitral Valley",
+      "category": "Geography",
+      "content": "Iranica characterizes the Chitral valley as semiarid. Its geography account says much precipitation is stored as mountain snow and that summer rain in the valley is associated with occasional westerly storms, while monsoon rainfall in southern Chitral can be limited. This summary describes the cited article, not a current climate-normal dataset.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    },
+    {
+      "title": "Khowar as a Lingua Franca in Chitral",
+      "category": "Language",
+      "content": "Liljegren and Khan describe Khowar as a language of wider communication in Chitral, where most speakers live. Their article also notes speaker communities in adjacent parts of Gilgit-Baltistan and Swat and among migrants in larger Pakistani cities; it does not provide a current census count.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "The Linguistic Relationship between Khowar and Kalasha",
+      "category": "Language",
+      "content": "A Cambridge University Press phonetic study identifies Kalasha as the closest linguistic relative of Khowar and notes that Kalasha is spoken in a few villages in southern Chitral. This records the authors' linguistic characterization without treating the two languages or communities as interchangeable.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "The Five Contrastive Vowels of Khowar",
+      "category": "Language",
+      "content": "Liljegren and Khan's phonetic description identifies five contrastive vowels in Khowar. It analyzes them by frontness, openness, and rounding and cautions that their realization varies in natural speech; this is a summary of that study's phonological description.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "Consonant Articulation in Khowar",
+      "category": "Language",
+      "content": "The Cambridge phonetic study describes several contrasting places of articulation in Khowar, including dental or alveolar closures and distinctions between apical and laminal postalveolar sounds. The authors note that some articulations vary across speakers and contexts.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "Lexical Stress and Low Tone in Khowar",
+      "category": "Language",
+      "content": "Liljegren and Khan report that stress placement can distinguish Khowar words, most often falling on the final syllable but also occurring earlier. Their study also describes low tone on some lexical vowels and notes that the relationship between tone, stress, and vowel duration requires careful analysis.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "Iranian Lexical Influence on Khowar",
+      "category": "Language",
+      "content": "The Cambridge phonetic study describes Khowar as having incorporated substantial lexical material from neighboring or influential Iranian languages, alongside other historical language contacts. The source does not quantify the share of vocabulary from each source.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "The Development of Khowar Orthography",
+      "category": "Language",
+      "content": "In describing the orthography used for their Khowar phonetic text, Liljegren and Khan trace its development from the early twentieth century and name Nasir-ul-Mulk, Mirza Mohammad Ghufran, Hisam-ul-Mulk, and Samsam-ul-Mulk among its contributors. They note the later role of Anjuman-e-taraqqi-e-Khowar in promoting it.",
+      "source": "Henrik Liljegren and Afsar Ali Khan, Khowar, Journal of the International Phonetic Association 47 (2017)",
+      "source_url": "https://doi.org/10.1017/S0025100316000220"
+    },
+    {
+      "title": "Named Ritual Sites in the Kalasha Valleys",
+      "category": "Culture",
+      "content": "Pakistan's UNESCO Tentative List submission names Jach and Prabazone altars, including Battrik Jach and Saji Gur Prabazone, and describes Jastak Han ceremonial halls. It also identifies Kundrik platforms, Praghein Tuk, ancestral graveyards, and open-air dancing grounds such as Natikeyin, Kalik, and Palawjaw as parts of a living cultural landscape.",
+      "source": "Pakistan State Party, Kalasha Valley Cultural Landscape, UNESCO World Heritage Tentative List (submitted 2026)",
+      "source_url": "https://whc.unesco.org/en/tentativelists/6965/"
+    },
+    {
+      "title": "Qazis and Community Governance in the Kalasha Valleys",
+      "category": "Culture",
+      "content": "The Kalasha Valley Cultural Landscape submission describes a council of elders known as Qazis and assigns it roles in access to sacred sites, ritual oversight, and resolving community disputes. These details are presented as claims in the State Party's 2026 Tentative List submission.",
+      "source": "Pakistan State Party, Kalasha Valley Cultural Landscape, UNESCO World Heritage Tentative List (submitted 2026)",
+      "source_url": "https://whc.unesco.org/en/tentativelists/6965/"
+    },
+    {
+      "title": "Land Stewardship in the Kalasha Cultural Landscape",
+      "category": "Culture",
+      "content": "Pakistan's UNESCO Tentative List submission describes Kalasha land use as connecting villages, cultivated terraces, forests, rivers, and seasonal grazing areas. It says forest and water management and seasonal grazing are governed by customary practices; this account is attributed to the submitting State Party.",
+      "source": "Pakistan State Party, Kalasha Valley Cultural Landscape, UNESCO World Heritage Tentative List (submitted 2026)",
+      "source_url": "https://whc.unesco.org/en/tentativelists/6965/"
+    },
+    {
+      "title": "Kalasha Seasonal Festivals and Agricultural Cycles",
+      "category": "Culture",
+      "content": "The Kalasha Valley Cultural Landscape submission describes seasonal festivals as aligned with agricultural cycles and changes in season, combining music, dance, narratives, and processions. This entry gives that broader relationship as described by the State Party and does not replace the archive's separate festival records.",
+      "source": "Pakistan State Party, Kalasha Valley Cultural Landscape, UNESCO World Heritage Tentative List (submitted 2026)",
+      "source_url": "https://whc.unesco.org/en/tentativelists/6965/"
+    },
+    {
+      "title": "Chitral's 1885 Subsidiary Alliance",
+      "category": "History",
+      "content": "The District Courts Chitral historical account states that in 1885 the British negotiated a subsidiary alliance with Chitral's hereditary ruler, after which the region became a princely state under British suzerainty. The account distinguishes this arrangement from the later end of princely administration.",
+      "source": "District Courts Chitral, District History",
+      "source_url": "https://www.districtcourtschitral.gov.pk/DistrictHistory/"
+    },
+    {
+      "title": "Muxi: A Chitrali Filled Roti",
+      "category": "Food",
+      "content": "SOCH Outreach Foundation's Chitral-created food exhibit describes Muxi as a filling of cumin- and mint-seasoned yogurt placed between two thin rotis. The entry follows the exhibit's spelling and description without adding ingredients or preparation steps not given there.",
+      "source": "SOCH Outreach Foundation, Ghalmandi, Google Arts & Culture (2021)",
+      "source_url": "https://artsandculture.google.com/asset/ghalmandi/NQFg4tks6-PqDA"
+    },
+    {
+      "title": "Qoqnuz in Chitrali Musical Folklore",
+      "category": "Music",
+      "content": "A Mahraka article by Sifud Din records a Chitrali folk account in which the mythical Qoqnuz bird sings melodies that people later remember and render instrumentally. The article names Berangi, Kroy Komou, Shah Mardan Khan, and Ali Sher Khan in this story; this is presented as folklore, not as a documented historical origin of Khowar music.",
+      "source": "Sifud Din, Genesis of Khowar Music, Mahraka",
+      "source_url": "https://mahraka.com/chitrali_music.html"
+    },
+    {
+      "title": "Historic Bazaar Centers of Chitral, Drosh, and Ayun",
+      "category": "Geography",
+      "content": "In its 1991 geography account, Encyclopaedia Iranica notes small bazaars in Chitral, Drosh, and Ayun and identifies the old British fort and cantonment at Chitral town. This records the article's period-specific description, not a current assessment of these settlements.",
+      "source": "Nigel J. R. Allan, Encyclopaedia Iranica, Chitral i. Geography (1991; updated 2013)",
+      "source_url": "https://www.iranicaonline.org/articles/chitral-i-geography/"
+    }
+  ]
+}

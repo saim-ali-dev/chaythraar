@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, Compass, Languages, Map, Music, Newspaper, ShieldAlert } from "lucide-react";
+import { ArrowUpRight, BookOpen, Compass, Languages, Map, Music, Newspaper, ShieldAlert, UtensilsCrossed } from "lucide-react";
 import { AssistantPanel } from "@/components/assistant/assistant-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
@@ -70,9 +70,11 @@ export default async function Home() {
           </div>
           <div className="mt-2 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
             <QuickLink href="/explore" icon={BookOpen} title="Encyclopedia" detail="Culture, history, heritage, and local knowledge" />
+            <QuickLink href="/profile" icon={Compass} title="Chitral Profile" detail="A regional overview of place, culture, and heritage" />
             <QuickLink href="/discover" icon={Compass} title="Places" detail="Explore the places directory" />
             <QuickLink href="/news" icon={Newspaper} title="News" detail="Read updates with their sources" />
             <QuickLink href="/music" icon={Music} title="Music" detail="Browse Chitral music records" />
+            <QuickLink href="/food" icon={UtensilsCrossed} title="Food" detail="Traditional Chitral dishes and culinary context" />
             <QuickLink href="/khowar" icon={Languages} title="Khowar" detail="Explore language and available sources" />
             <QuickLink href="/safety" icon={ShieldAlert} title="Safety" detail="Review current records and advisories" />
             <QuickLink href="/map" icon={Map} title="Map" detail="View mapped places and safety records" />

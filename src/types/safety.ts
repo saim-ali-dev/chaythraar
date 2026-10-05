@@ -15,6 +15,8 @@ export type SafetyEvent = {
   latitude: number | null;
   longitude: number | null;
   location_name: string | null;
+  additional_details?: string | null;
+  image_url?: string | null;
   issued_at: string;
   expires_at: string | null;
   created_at: string;

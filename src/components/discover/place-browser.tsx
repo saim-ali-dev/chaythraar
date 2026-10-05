@@ -25,7 +25,27 @@ export function PlaceBrowser({ places }: { places: PlaceRow[] }) {
 }
 
 function PlaceCard({ place }: { place: PlaceRow }) {
-  return <Card className="flex h-full flex-col overflow-hidden"><MediaFrame src={place.image_url} alt={place.name} fallbackTitle={place.name} fallbackDetail={place.category} className="aspect-[16/10] border-b border-[var(--color-line)]" /><div className="flex flex-1 flex-col p-5"><div className="flex items-start justify-between gap-3"><h2 className="text-xl font-semibold leading-7 text-[var(--color-ink)]">{place.name}</h2><Badge tone="copper" className="shrink-0">{place.category}</Badge></div><p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--color-slate)]">{place.description ?? "No description available."}</p><div className="mt-auto pt-5">{(place.opening_time || place.closing_time) && <p className="inline-flex items-center gap-2 text-xs text-[var(--color-slate)]"><Clock3 className="size-3.5 text-[var(--color-copper-deep)]" />{formatHours(place.opening_time, place.closing_time)}</p>}{place.source && <p className="mt-2 truncate text-xs text-[var(--color-muted)]">Source: {place.source}</p>}<Link href={`/discover/${place.id}`} className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">View place <ArrowUpRight className="size-4" /></Link></div></div></Card>;
+  return (
+    <Card className="flex h-full flex-col overflow-hidden">
+      <MediaFrame src={place.image_url} alt={place.name} fallbackTitle={place.name} fallbackDetail={place.category} className="aspect-[16/10] border-b border-[var(--color-line)]" />
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-xl font-semibold leading-7 text-[var(--color-ink)]">{place.name}</h2>
+          <Badge tone="copper" className="shrink-0">{place.category}</Badge>
+        </div>
+        <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--color-slate)]">{place.description ?? "No description available."}</p>
+        <div className="mt-auto pt-5">
+          {(place.opening_time || place.closing_time) && <p className="inline-flex items-center gap-2 text-xs text-[var(--color-slate)]"><Clock3 className="size-3.5 text-[var(--color-copper-deep)]" />{formatHours(place.opening_time, place.closing_time)}</p>}
+          {shouldShowSource(place.source) && <p className="mt-2 truncate text-xs text-[var(--color-muted)]">Source: {place.source}</p>}
+          <Link href={`/discover/${place.id}`} className="mt-4 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">View place <ArrowUpRight className="size-4" /></Link>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function shouldShowSource(source: string | null) {
+  return source !== null && !source.startsWith("OpenStreetMap contributors");
 }
 
 function formatHours(opening: string | null, closing: string | null): string {

@@ -308,6 +308,7 @@ async function toHazardInsert(item: SafetyEventDraft): Promise<HazardInsert> {
     source_name: item.source_name,
     source_url: item.source_url,
     source_type: item.source_type,
+    moderation_status: "approved",
     location_name: item.location_name,
     latitude: item.latitude,
     longitude: item.longitude,

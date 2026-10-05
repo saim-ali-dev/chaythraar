@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { getSafetyEvents } from "@/lib/supabase/safety";
 import { getSafetyStatus, isSafetyEventExpired } from "@/types/safety";
+import { SafetyReportForm } from "@/components/safety/safety-report-form";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,10 @@ export default async function SafetyPage() {
           description="Review available event records with severity, status, source, timing, and location shown separately."
           actions={!error && events.length > 0 ? <div className="min-w-40 border-l-2 border-[var(--color-copper)] pl-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">Current status</p><p className="mt-1 text-lg font-semibold text-[var(--color-ink)]">{activeEvents.length === 0 ? "No active events" : `${activeEvents.length} active ${activeEvents.length === 1 ? "event" : "events"}`}</p></div> : undefined}
         />
+        <section className="mt-8 border-t border-[var(--color-line-strong)] pt-6" aria-labelledby="report-hazard-heading">
+          <div className="mb-4"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-copper-deep)]">Community report</p><h2 id="report-hazard-heading" className="mt-2 text-xl font-semibold text-[var(--color-ink)]">Report a Hazard</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--color-slate)]">Reports remain private while pending. An administrator must approve a report before it appears here or on the map.</p></div>
+          <SafetyReportForm />
+        </section>
         {error ? <SafetyErrorState message={error} /> : events.length === 0 ? <EmptySafetyState /> : <>
           <section className="mt-10" aria-labelledby="active-safety-heading">
             <div className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">

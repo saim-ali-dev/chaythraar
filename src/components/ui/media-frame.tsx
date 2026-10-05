@@ -23,8 +23,8 @@ export function MediaFrame({
   imageClassName,
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
 }: MediaFrameProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const showImage = Boolean(src) && !imageFailed;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImage = Boolean(src) && failedSrc !== src;
 
   return (
     <div className={cn("relative aspect-[16/10] overflow-hidden bg-[var(--color-sand)]", className)}>
@@ -36,7 +36,7 @@ export function MediaFrame({
           unoptimized
           sizes={sizes}
           className={cn("object-cover object-center", imageClassName)}
-          onError={() => setImageFailed(true)}
+          onError={() => setFailedSrc(src)}
         />
       ) : (
         <div className="flex h-full min-h-32 flex-col justify-end border-b-2 border-[var(--color-copper)] p-5">

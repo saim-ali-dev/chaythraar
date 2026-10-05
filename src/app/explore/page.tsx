@@ -1,12 +1,14 @@
 import { EncyclopediaBrowser } from "@/components/encyclopedia/encyclopedia-browser";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
+import { isMusicCategory } from "@/lib/content-categories";
 import { getEncyclopediaEntries } from "@/lib/supabase/encyclopedia";
 
 export const dynamic = "force-dynamic";
 
 export default async function ExplorePage() {
-  const entries = await getEncyclopediaEntries();
+  const allEntries = await getEncyclopediaEntries();
+  const entries = allEntries.filter((entry) => !isMusicCategory(entry.category));
 
   return (
     <AppShell>

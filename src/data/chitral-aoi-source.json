@@ -1,0 +1,18 @@
+{
+  "name": "Upper and Lower Chitral",
+  "source": "Al-Hassan Associates / World Food Programme via ArcGIS FeatureServer",
+  "sourceUrl": "https://services3.arcgis.com/t6lYS2Pmd8iVx1fy/ArcGIS/rest/services/pak_bnd_adm4tehsil_aha/FeatureServer/0",
+  "sourceNote": "The service documents the 22 April 2021 Chitral bifurcation. The five selected tehsil polygons are checked against their district, tehsil, code, and 2023-01-08 edit timestamp before use as a MultiPolygon AOI.",
+  "province": "KHYBER PAKHTUNKHWA",
+  "districts": {
+    "CHITRAL LOWER": {
+      "tehsilCodes": [50701, 50702, 50703],
+      "tehsilNames": ["CHITRAL", "DROSH", "LOTKOH"]
+    },
+    "CHITRAL UPPER": {
+      "tehsilCodes": [50801, 50802],
+      "tehsilNames": ["MASTUJ", "MULKHOW"]
+    }
+  },
+  "featureLastEditedEpoch": 1673203295820
+}

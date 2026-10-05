@@ -7,6 +7,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getEncyclopediaEntryById } from "@/lib/supabase/encyclopedia";
+import { isMusicCategory } from "@/lib/content-categories";
 import { MediaFrame } from "@/components/ui/media-frame";
 
 export const dynamic = "force-dynamic";
@@ -25,14 +26,15 @@ export default async function EncyclopediaArticlePage({ params }: ArticlePagePro
   const { id } = await params;
   const entry = await getEncyclopediaEntryById(id);
   if (!entry) notFound();
+  const isMusicEntry = isMusicCategory(entry.category);
 
   return (
     <AppShell>
       <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl px-5 pb-28 pt-8 sm:px-8 lg:px-10 lg:pt-14">
-        <Link href="/explore" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-slate)] transition-colors hover:text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]"><ArrowLeft className="size-4" />Back to Encyclopedia</Link>
+        <Link href={isMusicEntry ? "/music" : "/explore"} className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-slate)] transition-colors hover:text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]"><ArrowLeft className="size-4" />Back to {isMusicEntry ? "Music" : "Encyclopedia"}</Link>
         <article className="mt-8">
           <header className="grid items-end gap-8 lg:grid-cols-[1fr_0.72fr]">
-            <div><Badge tone="copper">{entry.category} · Encyclopedia</Badge><h1 className="font-editorial mt-5 text-4xl leading-tight text-[var(--color-ink)] sm:text-5xl">{entry.title}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-slate)]">A knowledge entry from the CHAYTHRAAR archive.</p></div>
+            <div><Badge tone="copper">{isMusicEntry ? "Music" : `${entry.category} · Encyclopedia`}</Badge><h1 className="font-editorial mt-5 text-4xl leading-tight text-[var(--color-ink)] sm:text-5xl">{entry.title}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-slate)]">A knowledge entry from the CHAYTHRAAR archive.</p></div>
             <MediaFrame src={entry.image_url} alt={entry.title} fallbackTitle={entry.title} fallbackDetail={entry.category} className="aspect-[4/3] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 40vw" />
           </header>
 

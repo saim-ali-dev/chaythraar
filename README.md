@@ -1,126 +1,311 @@
 # CHAYTHRAAR
 
-CHAYTHRAAR is an AI-powered unified digital platform for Chitral, Pakistan. It brings local knowledge, discovery, language, safety, maps, weather, and current information into one thoughtful experience.
+CHAYTHRAAR is an AI-powered digital knowledge and information platform focused on preserving Chitral’s history, culture, heritage, language, local knowledge, and related information while making that knowledge accessible through a unified AI interface. Preservation is the primary purpose; the AI layer is the enabling system for discovery, retrieval, and explanation.
 
-## Current MVP
+## Why CHAYTHRAAR?
 
-The first foundation slice includes:
+Chitral has a rich body of historical, cultural, and community knowledge, but much of it remains difficult to access in a consistent digital form. Local knowledge, language, traditions, music, food, heritage, and historical information are often fragmented across different sources, websites, reports, and community records. Tourists, students, researchers, residents, and community members need a more accessible and better organized way to discover reliable regional knowledge.
 
-- A responsive application shell and global navigation
-- An assistant-led home experience with a UI-only demo interaction
-- Typed local demo content for knowledge, discovery, news, and safety
-- Placeholder routes for Explore, Discover, News, Safety, Khowar, and Map
-- A light visual system inspired by regional knowledge and exploration
+This project is designed to gather and structure that material in one place, with clear source attribution and a retrieval layer that helps people ask questions in plain language without losing the provenance of the knowledge behind the answer.
 
-All visible content is demo data. It is not a live news feed, safety service, map, weather service, or AI assistant.
+## What We Built
 
-## Tech Stack
+### 1. Central AI Assistant
+
+Implemented: CHAYTHRAAR includes a central assistant that can answer questions using project knowledge sources. The assistant retrieves relevant records from indexed knowledge chunks, filters them for relevance, and returns grounded answers with source attribution when available.
+
+The application is not a generic open-web AI assistant; it is designed to answer from the project’s own Chitral-focused knowledge evidence base.
+
+### 2. Encyclopedia / Chitral Knowledge
+
+Implemented: The project includes a Chitral encyclopedia and knowledge browser backed by the `encyclopedia` table and a corresponding retrieval pipeline. Content is stored with titles, categories, source text, media URLs, and source attribution.
+
+The knowledge layer covers areas including history, heritage, culture, communities, places, language context, and local knowledge as represented in reviewed records. The repository does not claim universal coverage of all Chitral knowledge; it supports a structured and expandable archive rather than a complete encyclopedia.
+
+### 3. Khowar
+
+Implemented: The project supports Khowar-facing language features with a lexical word-list import path and an AI assistant pathway that can query Khowar glossary context. The `khowar_lexicon` and `khowar_glossary` data models are present, and the UI explicitly states that the lexical data should not be treated as a complete dictionary or translation engine.
+
+This is a developing and carefully constrained feature. It is not presented as full language understanding or automated translation quality.
+
+### 4. Discover / Tourism
+
+Implemented: The project has a Discover page for places, backed by the `places` table and map markers. Place records include descriptions, categories, optional coordinates, imagery, opening times, and source metadata.
+
+Partial: The platform supports discovery and map-based browsing, but tourism data remains expandable rather than exhaustive. The repository does not claim a fully populated tourism dataset or advanced AI tourist recommendation features beyond the existing place directory and retrieval-enabled assistant.
+
+### 5. Safety Intelligence
+
+Implemented: CHAYTHRAAR includes a safety ingestion pipeline for official, news, and community safety sources. The project ingests risk data from NDMA Pakistan, PMD Pakistan Meteorological Department, PDMA Khyber Pakhtunkhwa, and selected Chitral Times / ChitralToday safety items when those sources produce relevant material.
+
+The system filters for Chitral relevance, checks freshness, removes duplicates, applies expiration rules, preserves source attribution, and stores historical and active states in the `hazards` table. Briefs are generated from the source text and are intended to be concise and grounded, not full article copies.
+
+The system does not copy entire source articles into the public-facing safety interface. The safety UI shows approved records, source names, dates, severity, location, and a concise summary or fallback wording.
+
+### 6. News
+
+Implemented: The news system ingests Chitral Times and ChitralToday RSS feeds, normalizes them, filters active items to a recent 48-hour window, deduplicates them, and stores the resulting records in the `news` table.
+
+The ingestion pipeline optionally summarizes entries using a Groq-compatible OpenAI-format API when the required environment variables are configured. Generated fields are stored separately and reused so unchanged records do not require repeated summarization.
+
+### 7. Map
+
+Implemented: The map uses Leaflet and OpenStreetMap tiles to display a Chitral-centered map with place markers and approved safety markers. Place and hazard records are loaded from Supabase, filters are available for map layers, and the UI includes a legend and Chitral weather panel.
+
+Partial: Some map layers and data coverage remain dependent on the availability of curated place and safety records, and the project does not claim that all Chitral geography or risk layers are complete.
+
+### 8. Weather
+
+Implemented: The project fetches live weather data from Open-Meteo for a Chitral coordinate set and renders current conditions plus a five-day forecast on the map page. This is a client-side live fetch with no API key required.
+
+## AI Architecture
+
+The application uses a retrieval-backed assistant pattern built around local, project-specific data.
+
+```text
+User
+  ↓
+Central AI Assistant
+  ↓
+Retrieval / Knowledge Layer
+  ↓
+Knowledge Sources
+  ├── Encyclopedia
+  ├── Khowar lexicon / glossary
+  ├── News
+  ├── Safety
+  ├── Places
+  └── Other Chitral knowledge records
+  ↓
+Grounded answer + source attribution
+```
+
+Implemented details:
+
+- `knowledge_chunks` stores embedded content for retrieval.
+- Gemini Embedding 2 is used for the main knowledge embedding model.
+- Voyage AI `voyage-3.5-lite` is used for Khowar glossary retrieval queries.
+- `match_knowledge_chunks` and `match_khowar_glossary_chunks` are invoked through Supabase/Postgres vector search.
+- The assistant fetches relevant records, constrains context size, and requests a JSON response that cites source IDs.
+- Source attribution is preserved in the answer path for grounded results.
+
+This is a practical RAG pattern, not a fully autonomous research engine. It depends on the quality and freshness of the indexed content and on the configured AI providers.
+
+## Safety Architecture
+
+The safety ingestion flow is implemented as follows:
+
+Source
+→ Adapter
+→ Normalization
+→ Chitral relevance filter
+→ Freshness filter
+→ Deduplication
+→ Expiration and policy handling
+→ AI brief generation when available
+→ Supabase storage
+→ Safety UI
+
+The project keeps source facts, source names, URLs, and timestamps. AI summarization is used to create concise grounded briefs, not to invent severity, impacts, or dates.
+
+## Technology Stack
+
+Implemented technologies and libraries in the repository:
 
 - Next.js App Router 16
-- React 19 and TypeScript
+- React 19
+- TypeScript
 - Tailwind CSS 4
+- Supabase JS and Supabase SSR
+- PostgreSQL via Supabase
+- pgvector / vector similarity search in the migration schema
+- Leaflet
+- OpenStreetMap tiles
+- Open-Meteo weather API
+- Google Gemini embeddings
+- Voyage AI embeddings
+- Groq OpenAI-compatible chat completion API
 - Lucide React icons
-- ESLint with Next.js Core Web Vitals rules
+- Node.js scripts for ingestion and indexing
+
+## Data Sources
+
+Actual source categories represented in the project:
+
+- Cultural and encyclopedic content: reviewed Chitral records inserted via manual content import or database review
+- Government and public safety: NDMA Pakistan, PMD Pakistan Meteorological Department, PDMA Khyber Pakhtunkhwa
+- News: Chitral Times and ChitralToday
+- Khowar lexical and glossary material: FLI Khowar word list and structured Bashir glossary records when present in the database
+- Weather: Open-Meteo
+- Map tiles: OpenStreetMap
+
+The project does not claim official endorsement or formal institutional partnership with any source.
+
+## Data Integrity & Safety
+
+The project’s operational approach emphasizes traceability and grounded results:
+
+- Source URLs are retained on records where present.
+- Source names and provenance fields are preserved.
+- AI output is bounded by retrieved source context instead of broad external knowledge.
+- Safety severity is not invented; the system applies policy and source-based contextualization.
+- Coordinates are only shown when supplied in a valid record.
+- Chitral relevance filtering is applied before safety records are admitted to the public interface.
+- Freshness and expiration windows are enforced.
+- Duplicate entries are removed within a run and across existing rows when appropriate.
+- Historical and active records remain distinct in the database and UI logic.
+
+## Project Structure
+
+```text
+├── src/
+│   ├── app/                  # Next.js App Router pages and API routes
+│   ├── components/          # UI components for map, assistant, news, safety, admin
+│   ├── lib/                 # data access, AI, embeddings, safety, news, Supabase helpers
+│   ├── types/               # shared TypeScript types
+│   └── data/                # content and demo data support
+├── supabase/
+│   ├── migrations/         # schema versioning and database changes
+│   └── seed/               # SQL seed templates and review files
+├── scripts/                 # ingestion, indexing, and import scripts
+├── public/                  # static assets
+├── tests/                   # project tests for the TypeScript runtime
+├── package.json             # scripts and dependencies
+├── next.config.ts
+├── eslint.config.mjs
+├── tsconfig.json
+├── .env.local               # local environment file, not committed
+└── README.md
+```
 
 ## Local Development
+
+Install dependencies and start the app:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Then open http://localhost:3000.
 
-Validation commands:
+Available project commands:
 
 ```bash
 npm run lint
 npm run build
-```
-
-## Planned Integrations
-
-- Supabase for PostgreSQL, pgvector, and storage
-- A retrieval-backed AI assistant
-- OpenStreetMap and Leaflet for maps
-- Open-Meteo for weather
-- Verified local sources for news and safety information
-- Structured Khowar language content
-
-Integrations will be added behind typed data and service boundaries so the UI does not need to be rewritten.
-
-## Supabase Foundation
-
-The repository contains the initial schema at `supabase/migrations/20260924000000_initial_schema.sql`. The app currently does not query Supabase, so the local demo experience works while the database is empty.
-
-Set these variables in an ignored local `.env.local` file:
-
-```text
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
-GROQ_API_KEY=your-groq-api-key
-NEWS_AI_API_URL=https://api.groq.com/openai/v1/chat/completions
-NEWS_AI_MODEL=openai/gpt-oss-20b
-```
-
-The values must come from the Supabase project settings. Never commit `.env.local` or expose the values in source code.
-For news and safety summarization, use a Groq API key in `GROQ_API_KEY`; keep it server-only and never place it in browser code.
-
-To apply the migration without installing the Supabase CLI:
-
-1. Open the Supabase project dashboard.
-2. Open **SQL Editor** and create a new query.
-3. Copy the complete contents of `supabase/migrations/20260924000000_initial_schema.sql` into the query editor.
-4. Run the query.
-5. In **Table Editor**, verify the five tables and in **Authentication > Policies**, verify that each table has RLS enabled and only the intended read policies.
-
-No seed data is included yet. Content remains local demo data until verified ingestion and moderation flows are implemented.
-
-## News Ingestion
-
-The existing sources are the publicly advertised Chitral Times RSS feed at `https://chitraltimes.com/feed/` (up to five RSS pages) and ChitralToday at `https://chitraltoday.net/feed/`. Run the canonical combined ingestion manually with:
-
-```bash
-npm run news:ingest
-```
-
-In addition to the public Supabase variables above, ingestion requires `SUPABASE_SERVICE_ROLE_KEY` in the ignored local `.env.local` file. This server-only key is required because the database has no anonymous write policy; it must never be exposed to browser code or committed.
-
-The command fetches and normalizes both feeds, then keeps candidates with `published_at >= now - 48 hours` using a single UTC timestamp for that run. The boundary is inclusive. It deduplicates exact `(source, normalized source_url)` identities, compares title, excerpt, category, language, and publication time (ignoring whitespace-only differences), and ranks eligible candidates by newest `published_at`, then ascending `source_url` and source name for deterministic ties. No source priority or external ranking score is used. At most 10 candidates are selected across the sources.
-
-Only selected new, materially changed, or incomplete records are sent to summarization. Completed generated headlines and summaries are reused for unchanged records. Source metadata is stored even if summarization is unavailable or fails. Older rows are not deleted; the active News page reads only the inclusive 48-hour window and displays at most 10 rows. A separate History UI is not implemented.
-
-The repository has no deployment-specific scheduler configuration. Configure the deployment scheduler to invoke `npm run news:ingest` every 12 hours, wait for each run to finish before starting another, and set scheduled-job concurrency to one. Both source adapters already run sequentially inside the canonical command. There is no database unique constraint on `(source, source_url)`, so application checks cannot guarantee idempotence against arbitrary concurrent manual runs.
-
-Generated CHAYTHRAAR headlines and summaries are additive fields from `supabase/migrations/20260925010000_add_generated_news_fields.sql`. Apply that migration before running the updated ingestion or backfill command. Groq summarization is configured with server-only `GROQ_API_KEY`, `NEWS_AI_API_URL`, and `NEWS_AI_MODEL`; without those variables, ingestion stores original metadata and leaves generated fields null.
-
-After applying the migration, use `npm run news:summarize` to manually backfill at most the 10 newest rows in the current 48-hour window that have missing generated fields. Complete historical rows are never resummarized by the backfill. The command is not scheduled automatically and does not copy full source articles.
-
-## Khowar Lexical Data
-
-The FLI [Khowar Word List](https://mozilladatacollective.com/datasets/cmlgxqdl80019mg07p0197u76) is licensed CC-BY-NC-4.0 and contains script/lexical tokens, not translation pairs. Apply `supabase/migrations/20260927000000_add_khowar_lexicon.sql` before importing. Download `khowar-word-list-3067143b.tar.gz` from Mozilla Data Collective while signed in, then run:
-
-```bash
-npm run khowar:import -- --archive /path/to/khowar-word-list-3067143b.tar.gz
+npm run test
+npm run content:import
+npm run khowar:import
+npm run khowar:bashir
 npm run rag:index
+npm run safety:ingest
+npm run news:ingest
+npm run news:summarize
 ```
 
-The importer verifies the official archive size, SHA-256, text-file layout, and expected token counts before writing. Each record retains FLI attribution, source URL, and license. RAG chunks identify this as lexical/script data without definitions or translations. The Bashir Khowar-English glossary is not imported: it is CC-BY-NC-ND, and redistribution of extracted entries would require additional permission. The Khowar Literature Corpus is not used.
+## Environment Variables
 
-## Verified Encyclopedia Seeds
+Public/client variables:
 
-The file [supabase/seed/encyclopedia.template.sql](supabase/seed/encyclopedia.template.sql) is a commented template only. It contains no real records and must not be run unchanged.
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 
-Before creating a seed file from the template:
+Server-only variables:
 
-1. Verify every claim against an identifiable, trustworthy source.
-2. Write an original summary rather than copying a copyrighted article verbatim.
-3. Confirm that each image URL is publicly accessible and legally usable by CHAYTHRAAR.
-4. Record the originating source in the `source` field.
-5. Review the completed SQL before applying it to the project.
+- SUPABASE_SERVICE_ROLE_KEY
+- GEMINI_API_KEY
+- VOYAGE_API_KEY
+- GROQ_API_KEY
+- NEWS_AI_API_URL
+- NEWS_AI_MODEL
+- CHAYTHRAAR_ADMIN_EMAILS
 
-To apply a reviewed seed through Supabase SQL Editor, open the project dashboard, create a new SQL query, paste the reviewed statements, and run them. Do not insert the template placeholders or unverified content.
+Important: `.env.local` is a local-only file and must not be committed. It should contain server-only secrets and keys, never public browser values outside the app’s configured client scope.
 
-### Source URL Note
+## Database
 
-The current `encyclopedia` table stores source attribution in `source` but does not have a dedicated `source_url` field. A URL column would improve provenance and reviewer workflows, but it is intentionally not being added until the data and moderation requirements are settled.
+The current Supabase schema includes these core tables and purposes:
+
+- `places`: curated place records with optional coordinates and source metadata
+- `encyclopedia`: verified topic records and local knowledge entries
+- `news`: RSS-derived and normalized news items with source and generated summaries
+- `hazards`: safety/advisory records with source type, status, expiration, and moderation metadata
+- `safety_report_votes`: user voting for approved community hazard reports
+- `translations`: verified Khowar/Urdu/English translation pairs
+- `khowar_lexicon`: imported FLI lexical word-list data with source attribution and licensing
+- `khowar_glossary`: structured glossary data with source provenance
+- `khowar_glossary_chunks`: chunked glossary embeddings for retrieval
+- `knowledge_chunks`: embedded source chunks for the assistant and retrieval engine
+- `site_media`: image and profile media metadata
+
+## Current Limitations
+
+The project is functional but still has genuine limits:
+
+- Some place and tourism data still needs expansion.
+- Map coverage is only as complete as the underlying data rows.
+- Khowar support is still a developing feature and should not be treated as a complete translation system.
+- AI functionality depends on provider availability, rate limits, and configured environment variables.
+- Some external data sources may time out or provide inconsistent availability.
+- The repository does not contain a complete national-scale knowledge base or a universal cultural archive.
+
+## Future Roadmap
+
+Planned improvements, not current implementation:
+
+- Expand verified Chitral knowledge coverage
+- Improve place and tourism records
+- Improve Khowar language capability and glossary coverage
+- Add stronger specialized AI workflows for safety, language, and cultural retrieval
+- Expand safety source coverage and verification
+- Improve emergency contact and community safety support
+- Add richer media and archival workflows
+- Expand map layers and environmental monitoring
+- Improve offline and low-connectivity support
+
+## Hackathon Context
+
+This project was developed for the HindukushSoft Technology & AI Day 2026 and the Chitral AI Challenge, with a social-impact orientation focused on preserving and making accessible local Chitral knowledge through AI-assisted retrieval and discovery.
+
+## Team
+
+The project team listed in the application is:
+
+- Saim Ali — Developer
+- Faizan Ali Haidar — R/D
+- Hidayat Ali — R/D
+- Suhaib Nazir — R/D
+
+## License
+
+No project license has currently been specified in the repository. The code and project assets are therefore not covered by a declared license unless one is added later.
+
+---
+
+## Status Summary
+
+Implemented:
+
+- Next.js app shell and routed experience
+- Retrieval-backed assistant with source attribution
+- Encyclopedia browsing and detail pages
+- News ingestion and partial summarization pipeline
+- Safety ingestion and moderation flow
+- Khowar lexical/glossary data and assistant support
+- Map and weather integration
+- Supabase-backed storage and vector search logic
+
+Partial:
+
+- Tourism/place data coverage
+- Khowar language depth
+- Safety source breadth and historical continuity
+- AI provider availability and rate-limit resilience
+
+Planned:
+
+- Larger verified culture and heritage archive
+- More extensive tourism data and guidance features
+- Additional environmental and media resources
+- Stronger offline and field-access workflows

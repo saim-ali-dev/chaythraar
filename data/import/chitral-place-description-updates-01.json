@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "records": [
+    { "name": "Chitral", "category": "City", "description": "The principal town of Chitral District, set in the Chitral River valley." },
+    { "name": "Mastuj", "category": "Town", "description": "A town in Upper Chitral, within the Mastuj valley." },
+    { "name": "Korai", "category": "Town", "description": "A settlement in Drosh Tehsil, in the southern part of Lower Chitral." },
+    { "name": "Ayun", "category": "Hamlet", "description": "A valley settlement south of Chitral, near the route into the Kalash valleys." },
+    { "name": "Reshun", "category": "Village", "description": "A village in Mulkhow Tehsil, Upper Chitral." },
+    { "name": "Mulkhow", "category": "Village", "description": "A settlement in the Mulkhow valley of Upper Chitral." },
+    { "name": "Birir", "category": "Village", "description": "A village in one of the Kalash valleys of southern Chitral." },
+    { "name": "Zargirandeh", "category": "Town", "description": "A settlement near Chitral town in Lower Chitral." },
+    { "name": "Garam Chasma", "category": "Town", "description": "A mountain town in Lotkoh Valley, known for its hot springs." },
+    { "name": "Awi (Mulkhow)", "category": "Village", "description": "A village in Mulkhow Tehsil, Upper Chitral." },
+    { "name": "Brep", "category": "Village", "description": "A village in the Mastuj valley of Upper Chitral." },
+    { "name": "Yarkhun Lusht", "category": "Village", "description": "A village in the Yarkhun valley of Upper Chitral." },
+    { "name": "Ursoon", "category": "Village", "description": "A mountain village in Drosh Tehsil, Lower Chitral." },
+    { "name": "Awi (Lotkoh)", "category": "Village", "description": "A village in Lotkoh Tehsil, Lower Chitral." }
+  ]
+}

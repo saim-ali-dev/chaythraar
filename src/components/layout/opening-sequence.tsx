@@ -21,7 +21,7 @@ export function OpeningSequence() {
       const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       setReducedMotion(shouldReduceMotion);
       setVisible(true);
-      finishTimer = window.setTimeout(() => setVisible(false), shouldReduceMotion ? 360 : 2450);
+      finishTimer = window.setTimeout(() => setVisible(false), shouldReduceMotion ? 360 : 2750);
     }, 0);
 
     return () => {

@@ -12,6 +12,9 @@ export type Database = {
           longitude: number | null;
           category: string;
           image_url: string | null;
+          image_source?: string | null;
+          image_credit?: string | null;
+          image_license?: string | null;
           opening_time: string | null;
           closing_time: string | null;
           source: string | null;
@@ -32,6 +35,9 @@ export type Database = {
           category: string;
           content: string;
           image_url: string | null;
+          image_source?: string | null;
+          image_credit?: string | null;
+          image_license?: string | null;
           source: string | null;
           source_url: string | null;
           media_url: string | null;
@@ -56,6 +62,9 @@ export type Database = {
           source: string;
           source_url: string | null;
           image_url: string | null;
+          image_source?: string | null;
+          image_credit?: string | null;
+          image_license?: string | null;
           published_at: string;
           category: string;
           created_at: string;
@@ -65,6 +74,25 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["news"]["Insert"]>;
+        Relationships: [];
+      };
+      site_media: {
+        Row: {
+          id: string;
+          media_key: string;
+          title: string;
+          category: string;
+          image_url: string | null;
+          image_source: string | null;
+          image_credit: string | null;
+          image_license: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["site_media"]["Row"], "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["site_media"]["Insert"]>;
         Relationships: [];
       };
       hazards: {
@@ -85,6 +113,14 @@ export type Database = {
           reported_at: string;
           issued_at: string | null;
           expires_at: string | null;
+          moderation_status?: "pending" | "approved" | "rejected";
+          submitted_at?: string;
+          additional_details?: string | null;
+          photo_path?: string | null;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          rejected_by?: string | null;
+          rejected_at?: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["hazards"]["Row"], "id" | "created_at"> & {
@@ -92,6 +128,23 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["hazards"]["Insert"]>;
+        Relationships: [];
+      };
+      safety_report_votes: {
+        Row: {
+          id: string;
+          report_id: string;
+          user_id: string;
+          vote: "correct" | "incorrect";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["safety_report_votes"]["Row"], "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["safety_report_votes"]["Insert"]>;
         Relationships: [];
       };
       translations: {

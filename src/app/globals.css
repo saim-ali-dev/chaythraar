@@ -75,15 +75,15 @@ summary:focus-visible {
 }
 
 .intro-presenter {
-  animation: chaythraar-presenter 2.45s ease both;
+  animation: chaythraar-presenter 2.75s ease both;
 }
 
 .intro-brand {
-  animation: chaythraar-brand 2.45s ease both;
+  animation: chaythraar-brand 2.75s ease both;
 }
 
 .intro-support {
-  animation: chaythraar-support 2.45s ease both;
+  animation: chaythraar-support 2.75s ease both;
 }
 
 @keyframes chaythraar-presenter {
@@ -149,6 +149,13 @@ summary:focus-visible {
   line-height: 1.5;
 }
 
+.map-popup-meta {
+  margin-top: 6px;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .chaythraar-place-marker {
   display: grid;
   width: 32px;
@@ -175,6 +182,7 @@ summary:focus-visible {
 .chaythraar-place-marker--settlement { background: #1c2b35; }
 .chaythraar-place-marker--other { background: #9d5437; }
 .chaythraar-place-marker--safety { background: #842f28; }
+.chaythraar-place-marker--safety-community { background: #a34f35; }
 
 .chaythraar-marker-icon {
   border: 0;
