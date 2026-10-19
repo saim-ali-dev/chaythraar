@@ -117,6 +117,7 @@ export async function ingestNewsSources(
 
   const recentItems = deduplicated.items.filter((item) => isNewsWithinActiveWindow(item.published_at, now));
   report.recent = recentItems.length;
+  report.filtered = deduplicated.items.length - recentItems.length;
   report.skipped += deduplicated.items.length - recentItems.length;
   if (recentItems.length === 0) return report;
 
@@ -223,6 +224,7 @@ function createEmptyReport(): NewsIngestionReport {
     discovered: 0,
     normalized: 0,
     recent: 0,
+    filtered: 0,
     new: 0,
     updated: 0,
     unchanged: 0,

@@ -23,6 +23,7 @@ export type NewsIngestionReport = {
   discovered: number;
   normalized: number;
   recent: number;
+  filtered: number;
   new: number;
   updated: number;
   unchanged: number;

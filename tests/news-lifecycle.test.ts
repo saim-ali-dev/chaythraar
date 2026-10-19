@@ -200,6 +200,7 @@ test("only the ten newest recent candidates are summarized and stored", async ()
 
   assert.equal(report.fetched, 13);
   assert.equal(report.recent, 12);
+  assert.equal(report.filtered, 1);
   assert.equal(report.selected, 10);
   assert.equal(report.not_selected, 2);
   assert.equal(report.skipped, 1);
