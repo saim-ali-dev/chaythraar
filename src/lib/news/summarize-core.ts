@@ -3,13 +3,19 @@ export type NewsSummarizationInput = {
   sourceDescription: string | null;
   originalLanguage: string;
   sourceName: string;
+  existingHeadline?: string | null;
+  existingSummaryShort?: string | null;
 };
 
 export type NewsSummarizationResult = {
   headline: string;
   summary_short: string;
+  headline_ur: string | null;
+  summary_short_ur: string | null;
   original_language: string;
 };
+
+export type SafetySummarizationResult = Pick<NewsSummarizationResult, "headline" | "summary_short" | "original_language">;
 
 export type SafetySummarizationInput = {
   title: string;
@@ -38,19 +44,21 @@ export async function summarizeNews(input: NewsSummarizationInput): Promise<News
     apiKey,
     apiUrl,
     model,
-    systemPrompt: "You create concise original news metadata for CHAYTHRAAR. Return JSON only with headline, summary_short, and original_language. Be factual, neutral, non-sensational, and use original wording. Do not invent facts or opinions. Preserve names, places, dates, numbers, and organizations accurately. Do not reproduce source text or the full article. The headline should be approximately 8-15 words. The summary should be approximately 25-45 words and one or two sentences.",
+    systemPrompt: "You create concise bilingual news metadata for CHAYTHRAAR. Return JSON only with headline, summary_short, headline_ur, summary_short_ur, and original_language. headline and summary_short must be in English. headline_ur and summary_short_ur must be faithful Urdu translations written in Urdu script. Be factual, neutral, and non-sensational. Do not invent facts or reproduce the full source. Preserve names, places, dates, numbers, and organizations accurately. The headline should be approximately 8-15 words. The summary should be approximately 25-45 words and one or two sentences. If existing English headline or summary fields are supplied and are already in English, retain their meaning and wording rather than generating replacements.",
     userPayload: {
       source_name: input.sourceName,
       original_language: input.originalLanguage,
       original_title: input.originalTitle,
       source_description_or_excerpt: input.sourceDescription,
+      existing_english_headline: input.existingHeadline,
+      existing_english_summary: input.existingSummaryShort,
     },
   });
 
   return parseSummarization(content, input.originalLanguage);
 }
 
-export async function summarizeSafety(input: SafetySummarizationInput): Promise<NewsSummarizationResult | null> {
+export async function summarizeSafety(input: SafetySummarizationInput): Promise<SafetySummarizationResult | null> {
   const apiKey = process.env.GROQ_API_KEY;
   const apiUrl = process.env.NEWS_AI_API_URL;
   const model = process.env.NEWS_AI_MODEL;
@@ -70,7 +78,12 @@ export async function summarizeSafety(input: SafetySummarizationInput): Promise<
     },
   });
 
-  return parseSummarization(content, "en");
+  const result = parseSummarization(content, "en");
+  return {
+    headline: result.headline,
+    summary_short: result.summary_short,
+    original_language: result.original_language,
+  };
 }
 
 export async function completeAssistantJson(input: AssistantCompletionInput): Promise<string | null> {
@@ -140,6 +153,8 @@ function parseSummarization(content: string, fallbackLanguage: string): NewsSumm
   return {
     headline,
     summary_short: summary,
+    headline_ur: typeof parsed.headline_ur === "string" && parsed.headline_ur.trim() ? parsed.headline_ur.trim() : null,
+    summary_short_ur: typeof parsed.summary_short_ur === "string" && parsed.summary_short_ur.trim() ? parsed.summary_short_ur.trim() : null,
     original_language: typeof parsed.original_language === "string" && parsed.original_language.trim() ? parsed.original_language.trim() : fallbackLanguage,
   };
 }

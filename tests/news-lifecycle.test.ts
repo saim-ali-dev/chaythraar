@@ -7,6 +7,7 @@ import {
   isNewsWithinActiveWindow,
   NEWS_ACTIVE_WINDOW_MS,
   selectTopNewsItems,
+  selectPendingNewsItems,
 } from "@/lib/news/lifecycle";
 import {
   ingestNewsSources,
@@ -140,43 +141,136 @@ test("an unchanged selected row missing generated fields is summarized without r
   assert.equal(repository.rows[0].headline, "Generated: Example story");
 });
 
-test("a changed candidate outside the top ten is updated and invalidated without summarization", async () => {
+test("legacy saved English summaries are preserved while Urdu translations are cached once", async () => {
   const repository = new MemoryNewsRepository();
-  const oldItem = makeItem("https://example.test/old-candidate", {
-    title: "Older candidate",
-    published_at: new Date(NOW.getTime() - 10 * 60_000).toISOString(),
-  });
-  const existing = makeExisting(oldItem);
+  const item = makeItem("https://example.test/legacy-translation");
+  const existing = makeExisting(item);
+  existing.summary_short_ur = null;
   repository.rows.push(existing);
-  const changedItem = { ...oldItem, summary: "Updated source excerpt." };
-  const newerItems = Array.from({ length: 10 }, (_, index) => makeItem(
-    `https://example.test/newer-${index}`,
-    {
-      title: `Newer candidate ${index}`,
-      published_at: new Date(NOW.getTime() - index * 60_000).toISOString(),
-    },
-  ));
-  const summarizedTitles: string[] = [];
+  let summarizeCalls = 0;
+  const summarize = async (input: NewsSummarizationInput) => {
+    summarizeCalls += 1;
+    assert.equal(repository.rows[0]?.urdu_translation_attempted_at, NOW.toISOString());
+    assert.equal(input.existingHeadline, "Stored headline");
+    assert.equal(input.existingSummaryShort, "Stored summary");
+    return summaryFor(input);
+  };
+  const source = makeAdapter("Chitral Times", [item]);
+  const options = makeOptions(repository, summarize);
 
+  const first = await ingestNewsSources([source], options);
+  const second = await ingestNewsSources([source], options);
+
+  assert.equal(first.updatedRows, 1);
+  assert.equal(first.selected, 1);
+  assert.equal(second.selected, 0);
+  assert.equal(second.reused, 1);
+  assert.equal(summarizeCalls, 1);
+  assert.equal(repository.rows[0].headline, "Stored headline");
+  assert.equal(repository.rows[0].summary_short, "Stored summary");
+  assert.equal(repository.rows[0].headline_ur, "محفوظ سرخی");
+  assert.equal(repository.rows[0].summary_short_ur, "ایک مختصر اردو خلاصہ۔");
+});
+
+test("an unsuccessful Urdu translation attempt is not repeated for an unchanged article", async () => {
+  const repository = new MemoryNewsRepository();
+  const item = makeItem("https://example.test/translation-unavailable");
+  const existing = makeExisting(item);
+  existing.headline_ur = null;
+  existing.summary_short_ur = null;
+  repository.rows.push(existing);
+  let summarizeCalls = 0;
+  const summarize = async (input: NewsSummarizationInput) => {
+    summarizeCalls += 1;
+    return {
+      headline: input.existingHeadline ?? "A source-backed English headline",
+      summary_short: input.existingSummaryShort ?? "A concise source-backed summary.",
+      headline_ur: null,
+      summary_short_ur: null,
+      original_language: input.originalLanguage,
+    };
+  };
+  const source = makeAdapter("Chitral Times", [item]);
+  const options = makeOptions(repository, summarize);
+
+  const first = await ingestNewsSources([source], options);
+  const second = await ingestNewsSources([source], options);
+
+  assert.equal(first.updatedRows, 1);
+  assert.equal(second.selected, 0);
+  assert.equal(second.reused, 1);
+  assert.equal(summarizeCalls, 1);
+  assert.equal(repository.rows[0].urdu_translation_attempted_at, NOW.toISOString());
+});
+
+test("a failed translation-attempt write prevents the AI call", async () => {
+  const repository = new MemoryNewsRepository();
+  const item = makeItem("https://example.test/translation-marker-failure");
+  const existing = makeExisting(item);
+  existing.headline_ur = null;
+  existing.summary_short_ur = null;
+  repository.rows.push(existing);
+  repository.rejectTranslationAttemptWrite = true;
+  let summarizeCalls = 0;
   const report = await ingestNewsSources(
-    [makeAdapter("Chitral Times", [...newerItems, changedItem])],
+    [makeAdapter("Chitral Times", [item])],
     makeOptions(repository, async (input) => {
-      summarizedTitles.push(input.originalTitle);
+      summarizeCalls += 1;
       return summaryFor(input);
     }),
   );
 
-  assert.equal(report.updated, 1);
-  assert.equal(report.selected, 10);
-  assert.equal(report.not_selected, 1);
-  assert.equal(report.summarized, 10);
-  assert.equal(report.updatedRows, 1);
-  assert.equal(summarizedTitles.includes("Older candidate"), false);
+  assert.equal(report.failed, 1);
+  assert.equal(summarizeCalls, 0);
+  assert.equal(repository.rows[0].urdu_translation_attempted_at, null);
+});
+
+test("a changed newer candidate beyond the cap remains pending until a later run", async () => {
+  const repository = new MemoryNewsRepository();
+  const oldItem = makeItem("https://example.test/old-candidate", {
+    title: "Newest changed candidate",
+    published_at: NOW.toISOString(),
+  });
+  const existing = makeExisting(oldItem);
+  repository.rows.push(existing);
+  const changedItem = { ...oldItem, summary: "Updated source excerpt." };
+  const olderItems = Array.from({ length: 10 }, (_, index) => makeItem(
+    `https://example.test/older-${index}`,
+    {
+      title: `Older candidate ${index}`,
+      published_at: new Date(NOW.getTime() - (index + 1) * 60_000).toISOString(),
+    },
+  ));
+  const summarizedTitles: string[] = [];
+
+  const summarize = async (input: NewsSummarizationInput) => {
+      summarizedTitles.push(input.originalTitle);
+      return summaryFor(input);
+  };
+  const source = makeAdapter("Chitral Times", [...olderItems, changedItem]);
+  const options = makeOptions(repository, summarize);
+  const first = await ingestNewsSources([source], options);
+
+  assert.equal(first.updated, 1);
+  assert.equal(first.selected, 10);
+  assert.equal(first.not_selected, 1);
+  assert.equal(first.summarized, 10);
+  assert.equal(first.updatedRows, 0);
+  assert.equal(summarizedTitles.includes("Newest changed candidate"), false);
   assert.equal(repository.rows.length, 11);
+  const unchangedStored = repository.rows.find((row) => row.id === existing.id);
+  assert.equal(unchangedStored?.summary, "A source excerpt.");
+
+  const second = await ingestNewsSources([source], options);
   const storedChanged = repository.rows.find((row) => row.id === existing.id);
+  assert.equal(second.updated, 1);
+  assert.equal(second.selected, 1);
+  assert.equal(second.not_selected, 0);
+  assert.equal(second.summarized, 1);
+  assert.equal(second.updatedRows, 1);
+  assert.equal(summarizedTitles.filter((title) => title === "Newest changed candidate").length, 1);
   assert.equal(storedChanged?.summary, "Updated source excerpt.");
-  assert.equal(storedChanged?.headline, null);
-  assert.equal(storedChanged?.summary_short, null);
+  assert.equal(storedChanged?.headline, "Generated: Newest changed candidate");
 });
 
 test("only the ten newest recent candidates are summarized and stored", async () => {
@@ -209,6 +303,79 @@ test("only the ten newest recent candidates are summarized and stored", async ()
   assert.equal(report.inserted, 10);
   assert.equal(repository.rows.length, 10);
   assert.equal(repository.rows.some((row) => row.source_url === old.source_url), false);
+});
+
+test("older pending articles share the 10-item run with newer arrivals", async () => {
+  const repository = new MemoryNewsRepository();
+  const olderPendingItems = Array.from({ length: 5 }, (_, index) => makeItem(
+    `https://example.test/near-expiry-${index}`,
+    {
+      title: `Near expiry ${index}`,
+      published_at: new Date(NOW.getTime() - NEWS_ACTIVE_WINDOW_MS + (index * 60_000)).toISOString(),
+    },
+  ));
+  for (const [index, item] of olderPendingItems.entries()) {
+    const existing = makeExisting(item);
+    existing.id = `pending-${index}`;
+    existing.headline_ur = null;
+    existing.summary_short_ur = null;
+    existing.urdu_translation_attempted_at = null;
+    repository.rows.push(existing);
+  }
+  const newItems = Array.from({ length: 10 }, (_, index) => makeItem(
+    `https://example.test/new-arrival-${index}`,
+    {
+      title: `New arrival ${index}`,
+      published_at: new Date(NOW.getTime() - index * 60_000).toISOString(),
+    },
+  ));
+
+  const report = await ingestNewsSources(
+    [makeAdapter("Chitral Times", [...olderPendingItems, ...newItems])],
+    makeOptions(repository),
+  );
+
+  assert.equal(selectPendingNewsItems([...olderPendingItems, ...newItems]).length, 10);
+  assert.equal(report.selected, 10);
+  assert.equal(report.updatedRows, 5);
+  assert.equal(report.inserted, 5);
+  assert.ok(olderPendingItems.every((item) => {
+    const row = repository.rows.find((candidate) => candidate.source_url === item.source_url);
+    return Boolean(row?.headline_ur && row.urdu_translation_attempted_at);
+  }));
+  assert.equal(repository.rows.filter((row) => row.source_url?.includes("new-arrival-")).length, 5);
+});
+
+test("articles beyond the per-run cap are processed on the next run", async () => {
+  const repository = new MemoryNewsRepository();
+  const summarizedTitles: string[] = [];
+  const summarize = async (input: NewsSummarizationInput) => {
+    summarizedTitles.push(input.originalTitle);
+    return summaryFor(input);
+  };
+  const items = Array.from({ length: 15 }, (_, index) => makeItem(
+    `https://example.test/backlog-${index}`,
+    {
+      title: `Backlog story ${index}`,
+      published_at: new Date(NOW.getTime() - index * 60_000).toISOString(),
+    },
+  ));
+  const source = makeAdapter("Chitral Times", items);
+  const options = makeOptions(repository, summarize);
+
+  const first = await ingestNewsSources([source], options);
+  const second = await ingestNewsSources([source], options);
+  const third = await ingestNewsSources([source], options);
+
+  assert.equal(first.inserted, 10);
+  assert.equal(first.selected, 10);
+  assert.equal(second.inserted, 5);
+  assert.equal(second.selected, 5);
+  assert.equal(third.inserted, 0);
+  assert.equal(third.selected, 0);
+  assert.equal(repository.rows.length, 15);
+  assert.equal(summarizedTitles.length, 15);
+  assert.equal(new Set(summarizedTitles).size, 15);
 });
 
 test("the same URL from two sources remains two records", async () => {
@@ -286,6 +453,8 @@ function makeItem(sourceUrl: string, overrides: Partial<NormalizedNewsItem> = {}
     summary: "A source excerpt.",
     headline: null,
     summary_short: null,
+    headline_ur: null,
+    summary_short_ur: null,
     original_title: title,
     original_language: "en",
     source: "Chitral Times",
@@ -306,6 +475,9 @@ function makeExisting(item: NormalizedNewsItem): ExistingNewsRow {
     source_url: item.source_url,
     headline: "Stored headline",
     summary_short: "Stored summary",
+    headline_ur: "محفوظ سرخی",
+    summary_short_ur: "محفوظ خلاصہ",
+    urdu_translation_attempted_at: null,
     original_title: item.original_title,
     original_language: item.original_language,
     category: item.category,
@@ -317,12 +489,15 @@ async function summaryFor(input: NewsSummarizationInput): Promise<NewsSummarizat
   return {
     headline: `Generated: ${input.originalTitle.trim()}`,
     summary_short: "A concise generated summary.",
+    headline_ur: `ترجمہ: ${input.originalTitle.trim()}`,
+    summary_short_ur: "ایک مختصر اردو خلاصہ۔",
     original_language: input.originalLanguage,
   };
 }
 
 class MemoryNewsRepository implements NewsIngestionRepository {
   readonly rows: ExistingNewsRow[] = [];
+  rejectTranslationAttemptWrite = false;
   private nextId = 1;
 
   async listBySource(source: string, sourceUrls: string[]) {
@@ -343,6 +518,9 @@ class MemoryNewsRepository implements NewsIngestionRepository {
         source_url: row.source_url,
         headline: row.headline,
         summary_short: row.summary_short,
+        headline_ur: row.headline_ur,
+        summary_short_ur: row.summary_short_ur,
+        urdu_translation_attempted_at: row.urdu_translation_attempted_at,
         original_title: row.original_title,
         original_language: row.original_language,
         category: row.category,
@@ -353,6 +531,9 @@ class MemoryNewsRepository implements NewsIngestionRepository {
   }
 
   async update(id: string, values: NewsUpdate) {
+    if (this.rejectTranslationAttemptWrite && values.urdu_translation_attempted_at) {
+      return { error: "simulated marker write failure" };
+    }
     const index = this.rows.findIndex((row) => row.id === id);
     if (index < 0) return { error: "row not found" };
     this.rows[index] = { ...this.rows[index], ...values };

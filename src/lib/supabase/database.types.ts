@@ -57,6 +57,9 @@ export type Database = {
           summary: string | null;
           headline: string | null;
           summary_short: string | null;
+          headline_ur: string | null;
+          summary_short_ur: string | null;
+          urdu_translation_attempted_at: string | null;
           original_title: string | null;
           original_language: string | null;
           source: string;

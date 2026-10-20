@@ -11,7 +11,7 @@ export async function GET() {
   if (!await getAdminUser()) return NextResponse.json({ error: "Admin access required." }, { status: 401 });
   const supabase = createAdminSupabaseClient();
   const { data, count, error } = await supabase.from("news")
-    .select("id,title,summary,headline,summary_short,original_title,original_language,source,source_url,image_url,published_at,category,created_at", { count: "exact" })
+    .select("id,title,summary,headline,summary_short,headline_ur,summary_short_ur,original_title,original_language,source,source_url,image_url,published_at,category,created_at", { count: "exact" })
     .order("published_at", { ascending: false })
     .limit(100);
   if (error) return NextResponse.json({ error: "Could not load news records." }, { status: 503 });

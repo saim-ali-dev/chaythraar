@@ -72,6 +72,8 @@ export function normalizeChitralTimesItem(rawItem: unknown): NormalizedNewsItem 
     summary: summarizeDescription(rawItem.description),
     headline: null,
     summary_short: null,
+    headline_ur: null,
+    summary_short_ur: null,
     original_title: title,
     original_language: detectOriginalLanguage(title),
     source: "Chitral Times",

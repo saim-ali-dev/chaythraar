@@ -42,6 +42,10 @@ export function hasGeneratedNewsSummary(item: Pick<NormalizedNewsItem, "headline
   return Boolean(item.headline?.trim() && item.summary_short?.trim());
 }
 
+export function hasGeneratedUrduNewsTranslation(item: Pick<NormalizedNewsItem, "headline_ur" | "summary_short_ur">): boolean {
+  return Boolean(item.headline_ur?.trim() && item.summary_short_ur?.trim());
+}
+
 export function hasMaterialNewsChange(existing: ExistingNewsContent, candidate: NormalizedNewsItem): boolean {
   return normalizeText(existing.title) !== normalizeText(candidate.title)
     || normalizeText(existing.summary) !== normalizeText(candidate.summary)
@@ -54,6 +58,14 @@ export function hasMaterialNewsChange(existing: ExistingNewsContent, candidate: 
 export function selectTopNewsItems<T extends Pick<NormalizedNewsItem, "published_at" | "source_url" | "source">>(items: T[], limit = NEWS_ACTIVE_LIMIT): T[] {
   return [...items]
     .sort((left, right) => parseTimestamp(right.published_at) - parseTimestamp(left.published_at)
+      || compareText(left.source_url, right.source_url)
+      || compareText(left.source, right.source))
+    .slice(0, Math.max(0, limit));
+}
+
+export function selectPendingNewsItems<T extends Pick<NormalizedNewsItem, "published_at" | "source_url" | "source">>(items: T[], limit = NEWS_ACTIVE_LIMIT): T[] {
+  return [...items]
+    .sort((left, right) => parseTimestamp(left.published_at) - parseTimestamp(right.published_at)
       || compareText(left.source_url, right.source_url)
       || compareText(left.source, right.source))
     .slice(0, Math.max(0, limit));

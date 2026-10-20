@@ -8,7 +8,7 @@ export async function getNewsEntries(): Promise<NewsEntry[]> {
     const activeWindowStart = getNewsActiveWindowStart().toISOString();
     const { data, error } = await supabase
       .from("news")
-      .select("id, title, summary, headline, summary_short, original_title, original_language, source, source_url, image_url, published_at, category, created_at")
+      .select("id, title, summary, headline, summary_short, headline_ur, summary_short_ur, original_title, original_language, source, source_url, image_url, published_at, category, created_at")
       .gte("published_at", activeWindowStart)
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })

@@ -1,32 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import { NEWS_LANGUAGES, resolveNewsLanguageContent, type NewsLanguage } from "@/lib/news/language";
+import type { NewsEntry } from "@/types/content";
 
 type NewsLanguageViewProps = {
-  headline: string;
-  summary: string;
-  originalTitle: string;
-  originalSummary: string | null;
+  entry: NewsEntry;
 };
 
-type NewsLanguage = "en" | "ur";
-
-export function NewsLanguageView({ headline, summary, originalTitle, originalSummary }: NewsLanguageViewProps) {
+export function NewsLanguageView({ entry }: NewsLanguageViewProps) {
   const [language, setLanguage] = useState<NewsLanguage>("en");
   const isUrdu = language === "ur";
+  const content = resolveNewsLanguageContent(entry, language);
 
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between gap-3">
         <div className="inline-flex rounded-full border border-[var(--color-line-strong)] bg-[var(--color-mist)] p-0.5" role="group" aria-label="Article language">
-          <LanguageButton active={!isUrdu} label="English" onClick={() => setLanguage("en")} />
-          <LanguageButton active={isUrdu} label="اردو" onClick={() => setLanguage("ur")} />
+          {NEWS_LANGUAGES.map((option) => <LanguageButton key={option.code} active={language === option.code} label={option.label} onClick={() => setLanguage(option.code)} />)}
         </div>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">{isUrdu ? "Original" : "CHAYTHRAAR"}</span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">{isUrdu ? "Urdu" : "English"}</span>
       </div>
-      <div className="mt-4" lang={isUrdu ? "ur" : "en"} dir={isUrdu ? "rtl" : "ltr"}>
-        <h2 className={isUrdu ? "font-urdu text-right text-xl font-semibold leading-10 text-[var(--color-ink)]" : "text-xl font-semibold leading-7 tracking-[-0.025em] text-[var(--color-ink)]"}>{isUrdu ? originalTitle : headline}</h2>
-        <p className={isUrdu ? "font-urdu mt-3 text-right text-sm leading-8 text-[var(--color-slate)]" : "mt-3 line-clamp-4 text-sm leading-6 text-[var(--color-slate)]"}>{isUrdu ? originalSummary ?? "Original Urdu excerpt unavailable." : summary}</p>
+      <div className="mt-4" lang={content.language} dir={isUrdu ? "rtl" : "ltr"}>
+        <h2 className={isUrdu ? "font-urdu text-right text-xl font-semibold leading-10 text-[var(--color-ink)]" : "text-xl font-semibold leading-7 tracking-[-0.025em] text-[var(--color-ink)]"}>{content.headline}</h2>
+        <p className={isUrdu ? "font-urdu mt-3 text-right text-sm leading-8 text-[var(--color-slate)]" : "mt-3 line-clamp-4 text-sm leading-6 text-[var(--color-slate)]"}>{content.summary}</p>
       </div>
     </div>
   );

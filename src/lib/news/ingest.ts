@@ -1,8 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { chitralTodayAdapter } from "@/lib/news/sources/chitral-today";
 import { fetchChitralTimesItems, normalizeChitralTimesItem } from "@/lib/news/chitral-times";
-import { deduplicateNewsItems, hasGeneratedNewsSummary, hasMaterialNewsChange, isNewsWithinActiveWindow, selectTopNewsItems } from "@/lib/news/lifecycle";
+import { deduplicateNewsItems, hasGeneratedNewsSummary, hasGeneratedUrduNewsTranslation, hasMaterialNewsChange, isNewsWithinActiveWindow, selectPendingNewsItems } from "@/lib/news/lifecycle";
 import { isNewsSummarizationConfigured, summarizeNews } from "@/lib/news/summarize-core";
+import { detectNewsTextLanguage } from "@/lib/news/language";
 import { createNewsIngestionSupabaseClient } from "@/lib/news/supabase";
 import type { NewsIngestionReport, NewsSourceAdapter, NormalizedNewsItem } from "@/lib/news/types";
 import type { NewsSummarizationInput, NewsSummarizationResult } from "@/lib/news/summarize-core";
@@ -39,6 +40,9 @@ export type ExistingNewsRow = Pick<NewsRow,
   | "source_url"
   | "headline"
   | "summary_short"
+  | "headline_ur"
+  | "summary_short_ur"
+  | "urdu_translation_attempted_at"
   | "original_title"
   | "original_language"
   | "category"
@@ -62,6 +66,11 @@ type Candidate = {
   item: NormalizedNewsItem;
   existing: ExistingNewsRow | null;
   state: "new" | "updated" | "unchanged";
+};
+
+type SummaryGeneration = {
+  result: NewsSummarizationResult | null;
+  urduTranslationAttemptedAt: string | null;
 };
 
 export async function ingestChitralTimes(options?: NewsIngestionOptions): Promise<NewsIngestionReport> {
@@ -167,50 +176,51 @@ export async function ingestNewsSources(
   }
   report.already_existing = report.updated + report.unchanged;
 
-  const selectedItems = selectTopNewsItems(candidates.map((candidate) => candidate.item));
-  const selectedIdentities = new Set(selectedItems.map((item) => newsIdentity(item.source, item.source_url)));
-  const selectedCandidates = candidates.filter((candidate) => selectedIdentities.has(newsIdentity(candidate.item.source, candidate.item.source_url)));
-  report.selected = selectedCandidates.length;
-  report.not_selected = candidates.length - selectedCandidates.length;
+  const pendingCandidates = candidates.filter((candidate) => candidate.state !== "unchanged"
+    || !candidate.existing
+    || (!candidate.existing.urdu_translation_attempted_at
+      && (!hasGeneratedNewsSummary(candidate.existing) || !hasGeneratedUrduNewsTranslation(candidate.existing))));
+  report.reused += candidates.length - pendingCandidates.length;
 
-  for (const candidate of candidates) {
-    if (candidate.state !== "updated" || selectedIdentities.has(newsIdentity(candidate.item.source, candidate.item.source_url))) continue;
-    if (candidate.existing) {
-      await persistUpdate(repository, candidate.existing.id, {
-        ...sourceFields(candidate.item),
-        headline: null,
-        summary_short: null,
-      }, report);
-    }
-  }
+  const selectedItems = selectPendingNewsItems(pendingCandidates.map((candidate) => candidate.item));
+  const selectedIdentities = new Set(selectedItems.map((item) => newsIdentity(item.source, item.source_url)));
+  const selectedCandidates = pendingCandidates.filter((candidate) => selectedIdentities.has(newsIdentity(candidate.item.source, candidate.item.source_url)));
+  report.selected = selectedCandidates.length;
+  report.not_selected = pendingCandidates.length - selectedCandidates.length;
 
   const isSummarizationConfigured = options.summarizationConfigured ?? isNewsSummarizationConfigured();
   const summarize = options.summarize ?? summarizeNews;
   for (const candidate of selectedCandidates) {
     if (candidate.state === "unchanged") {
-      if (!candidate.existing || hasGeneratedNewsSummary(candidate.existing)) {
-        report.reused += 1;
-        continue;
+      const existing = candidate.existing;
+      if (!existing) continue;
+      if (isSummarizationConfigured) {
+        const attemptedAt = now.toISOString();
+        if (!await persistUrduTranslationAttempt(repository, existing.id, attemptedAt, report)) continue;
       }
-
-      const generated = await generateSummary(candidate.item, summarize, isSummarizationConfigured, report);
-      if (generated) {
-        await persistUpdate(repository, candidate.existing.id, generatedFields(generated), report);
+      const generation = await generateSummary(candidate.item, summarize, isSummarizationConfigured, report, now, existing);
+      if (generation.result) {
+        await persistUpdate(repository, existing.id, generatedFields(generation.result, existing), report);
       }
       continue;
     }
 
-    const generated = await generateSummary(candidate.item, summarize, isSummarizationConfigured, report);
+    const generation = await generateSummary(candidate.item, summarize, isSummarizationConfigured, report, now);
     if (candidate.state === "new") {
+      const generatedValues = generatedFields(generation.result);
       await persistInsert(repository, [{
         ...sourceFields(candidate.item),
-        headline: generated?.headline ?? null,
-        summary_short: generated?.summary_short ?? null,
+        headline: generatedValues.headline ?? null,
+        summary_short: generatedValues.summary_short ?? null,
+        headline_ur: generatedValues.headline_ur ?? null,
+        summary_short_ur: generatedValues.summary_short_ur ?? null,
+        urdu_translation_attempted_at: generation.urduTranslationAttemptedAt,
       }], report);
     } else if (candidate.existing) {
       await persistUpdate(repository, candidate.existing.id, {
         ...sourceFields(candidate.item),
-        ...generatedFields(generated),
+        ...generatedFields(generation.result),
+        urdu_translation_attempted_at: generation.urduTranslationAttemptedAt,
       }, report);
     }
   }
@@ -249,7 +259,7 @@ function createSupabaseNewsRepository(supabase: SupabaseClient<Database>): NewsI
     async listBySource(source, sourceUrls) {
       const { data, error } = await supabase
         .from("news")
-        .select("id, title, summary, source, source_url, headline, summary_short, original_title, original_language, category, published_at")
+        .select("id, title, summary, source, source_url, headline, summary_short, headline_ur, summary_short_ur, urdu_translation_attempted_at, original_title, original_language, category, published_at")
         .eq("source", source)
         .in("source_url", sourceUrls);
       return { rows: (data ?? []) as ExistingNewsRow[], error: error?.message ?? null };
@@ -270,30 +280,35 @@ async function generateSummary(
   summarize: NonNullable<NewsIngestionOptions["summarize"]>,
   configured: boolean,
   report: NewsIngestionReport,
-): Promise<NewsSummarizationResult | null> {
+  now: Date,
+  existing?: ExistingNewsRow,
+): Promise<SummaryGeneration> {
   if (!configured) {
     report.summarization_skipped += 1;
-    return null;
+    return { result: null, urduTranslationAttemptedAt: null };
   }
 
+  const urduTranslationAttemptedAt = now.toISOString();
   try {
     const generated = await summarize({
       originalTitle: item.original_title,
       sourceDescription: item.summary,
       originalLanguage: item.original_language,
       sourceName: item.source,
+      existingHeadline: isEnglishText(existing?.headline) ? existing?.headline : null,
+      existingSummaryShort: isEnglishText(existing?.summary_short) ? existing?.summary_short : null,
     });
     if (!generated) {
       report.summarization_skipped += 1;
-      return null;
+      return { result: null, urduTranslationAttemptedAt };
     }
     report.summarized += 1;
-    return generated;
+    return { result: generated, urduTranslationAttemptedAt };
   } catch (error) {
     report.failed += 1;
     report.summarization_failed += 1;
     report.errors.push(`Could not summarize "${item.original_title}": ${errorMessage(error, "unknown provider error")}`);
-    return null;
+    return { result: null, urduTranslationAttemptedAt };
   }
 }
 
@@ -327,6 +342,27 @@ async function persistUpdate(repository: NewsIngestionRepository, id: string, va
   }
 }
 
+async function persistUrduTranslationAttempt(
+  repository: NewsIngestionRepository,
+  id: string,
+  attemptedAt: string,
+  report: NewsIngestionReport,
+): Promise<boolean> {
+  try {
+    const { error } = await repository.update(id, { urdu_translation_attempted_at: attemptedAt });
+    if (error) {
+      report.failed += 1;
+      report.errors.push(`Could not record Urdu translation attempt: ${error}`);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    report.failed += 1;
+    report.errors.push(`Could not record Urdu translation attempt: ${errorMessage(error, "unknown storage error")}`);
+    return false;
+  }
+}
+
 function sourceFields(item: NormalizedNewsItem): NewsSourceFields {
   return {
     title: item.title,
@@ -341,11 +377,17 @@ function sourceFields(item: NormalizedNewsItem): NewsSourceFields {
   };
 }
 
-function generatedFields(generated: NewsSummarizationResult | null): NewsUpdate {
+function generatedFields(generated: NewsSummarizationResult | null, existing?: ExistingNewsRow): NewsUpdate {
   return {
-    headline: generated?.headline ?? null,
-    summary_short: generated?.summary_short ?? null,
+    headline: existing && isEnglishText(existing.headline) ? existing.headline : generated?.headline ?? existing?.headline ?? null,
+    summary_short: existing && isEnglishText(existing.summary_short) ? existing.summary_short : generated?.summary_short ?? existing?.summary_short ?? null,
+    headline_ur: existing?.headline_ur ?? generated?.headline_ur ?? null,
+    summary_short_ur: existing?.summary_short_ur ?? generated?.summary_short_ur ?? null,
   };
+}
+
+function isEnglishText(value: string | null | undefined): boolean {
+  return detectNewsTextLanguage(value) === "en";
 }
 
 function newsIdentity(source: string, sourceUrl: string): string {
