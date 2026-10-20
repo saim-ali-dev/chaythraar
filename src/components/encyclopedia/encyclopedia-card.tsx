@@ -3,6 +3,8 @@ import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { MediaFrame } from "@/components/ui/media-frame";
+import { getCuratedArchiveImage } from "@/lib/curated-images";
+import { getSafeImageSource } from "@/lib/media-images";
 import type { EncyclopediaEntry } from "@/types/content";
 
 type EncyclopediaCardProps = {
@@ -11,9 +13,11 @@ type EncyclopediaCardProps = {
 };
 
 export function EncyclopediaCard({ entry, preload = false }: EncyclopediaCardProps) {
+  const storedImageIsUsable = Boolean(getSafeImageSource(entry.image_url, Boolean(entry.image_source?.trim() && entry.image_license?.trim())));
+  const curatedImage = storedImageIsUsable ? null : getCuratedArchiveImage(entry.title);
   return (
     <Card className="group flex h-full flex-col overflow-hidden transition-transform hover:-translate-y-0.5">
-      <MediaFrame src={entry.image_url} alt={`Image associated with ${entry.title}`} fallbackTitle={entry.title} fallbackDetail={entry.category} imageSource={entry.image_source} imageCredit={entry.image_credit} imageLicense={entry.image_license} preload={preload} className="aspect-[16/10] border-b border-[var(--color-line)]" />
+      <MediaFrame src={storedImageIsUsable ? entry.image_url : curatedImage?.src ?? null} alt={curatedImage?.alt ?? `Image associated with ${entry.title}`} fallbackTitle={entry.title} fallbackDetail={entry.category} imageSource={curatedImage?.imageSource ?? entry.image_source} imageSourceUrl={curatedImage?.imageSourceUrl} imageCredit={curatedImage?.imageCredit ?? entry.image_credit} imageLicense={curatedImage?.imageLicense ?? entry.image_license} imageLicenseUrl={curatedImage?.imageLicenseUrl} imageChanges={curatedImage?.imageChanges} preload={preload} className="aspect-[16/10] border-b border-[var(--color-line)]" />
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <Badge tone="copper">{entry.category}</Badge>

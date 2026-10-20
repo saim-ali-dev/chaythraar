@@ -1,0 +1,14 @@
+# Curated Image Attribution
+
+All local WebP files in this directory are adapted from the original files linked below. Each is licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0). Give appropriate credit, link to the license, and indicate modifications. Adaptations must be shared under the same or a compatible license. The images were resized to a maximum 1800 px and converted from JPEG to WebP without cropping the source files.
+
+| Local file | Subject | Creator | Source file page | Original file | License |
+| --- | --- | --- | --- | --- | --- |
+| `chitral-town.webp` | Chitral city and river | Shah Tahsin Anwar | [City of Chitral.jpg](https://commons.wikimedia.org/wiki/File:City_of_Chitral.jpg) | [Original JPEG](https://upload.wikimedia.org/wikipedia/commons/a/a5/City_of_Chitral.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `shahi-fort.webp` | Shahi Fort, Chitral | Kamran Adil | [Shahi Fort Chitral KPK Pakistan.JPG](https://commons.wikimedia.org/wiki/File:Shahi_Fort_Chitral_KPK_Pakistan.JPG) | [Original JPEG](https://upload.wikimedia.org/wikipedia/commons/d/d6/Shahi_Fort_Chitral_KPK_Pakistan.JPG) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `shahi-mosque.webp` | Shahi Mosque, Chitral | Fassifarooq | [Shahi Mosque, Chitral.jpg](https://commons.wikimedia.org/wiki/File:Shahi_Mosque,_Chitral.jpg) | [Original JPEG](https://upload.wikimedia.org/wikipedia/commons/b/bd/Shahi_Mosque%2C_Chitral.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `qaqlasht-meadows.webp` | Qaqlasht Meadows above Booni | Abad Agha | [Sunrise in QL.jpg](https://commons.wikimedia.org/wiki/File:Sunrise_in_QL.jpg) | [Original JPEG](https://upload.wikimedia.org/wikipedia/commons/7/72/Sunrise_in_QL.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `chilam-josh.webp` | Chilam Josh festival in Bumburet, Chitral | Tariqsulemani | [Chilam Gosh Festival, Chitral, Pakistan.jpg](https://commons.wikimedia.org/wiki/File:Chilam_Gosh_Festival,_Chitral,_Pakistan.jpg) | [Original JPEG](https://upload.wikimedia.org/wikipedia/commons/2/26/Chilam_Gosh_Festival%2C_Chitral%2C_Pakistan.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `kalash-house.webp` | Typical house in Kalash Valley | Shah Tahsin Anwar | [A typical house in Kalash Valley.jpg](https://commons.wikimedia.org/wiki/File:A_typical_house_in_Kalash_Valley.jpg) | [Original JPEG](https://upload.wikimedia.org/wikipedia/commons/6/6a/A_typical_house_in_Kalash_Valley.jpg) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+
+`src/lib/curated-images.ts` is the runtime metadata and exact-title mapping source of truth. These curated images are static site assets, not fabricated database records. Publisher news images are not included.

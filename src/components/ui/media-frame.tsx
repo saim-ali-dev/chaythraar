@@ -11,8 +11,11 @@ type MediaFrameProps = {
   fallbackTitle: string;
   fallbackDetail?: string | null;
   imageSource?: string | null;
+  imageSourceUrl?: string | null;
   imageCredit?: string | null;
   imageLicense?: string | null;
+  imageLicenseUrl?: string | null;
+  imageChanges?: string | null;
   className?: string;
   imageClassName?: string;
   sizes?: string;
@@ -25,8 +28,11 @@ export function MediaFrame({
   fallbackTitle,
   fallbackDetail,
   imageSource,
+  imageSourceUrl,
   imageCredit,
   imageLicense,
+  imageLicenseUrl,
+  imageChanges,
   className,
   imageClassName,
   sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
@@ -34,6 +40,8 @@ export function MediaFrame({
 }: MediaFrameProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const safeSrc = getSafeImageSource(src, Boolean(imageSource?.trim() && imageLicense?.trim()));
+  const safeSourceUrl = getSafeImageSource(imageSourceUrl ?? null, true);
+  const safeLicenseUrl = getSafeImageSource(imageLicenseUrl ?? null, true);
   const showImage = safeSrc !== null && failedSrc !== safeSrc;
 
   return (
@@ -71,8 +79,9 @@ export function MediaFrame({
       </div>
       {showImage && <figcaption className="flex flex-wrap gap-x-3 gap-y-1 border-b border-[var(--color-line)] px-3 py-2 text-[11px] leading-4 text-[var(--color-muted)]">
         {imageCredit && <span className="break-all">Photo: {imageCredit}</span>}
-        {imageSource && <span className="break-all">Source: {imageSource}</span>}
-        {imageLicense && <span className="break-all">License: {imageLicense}</span>}
+        {imageSource && <span className="break-all">Source: {safeSourceUrl ? <a className="underline underline-offset-2" href={safeSourceUrl} target="_blank" rel="noopener noreferrer">{imageSource}</a> : imageSource}</span>}
+        {imageLicense && <span className="break-all">License: {safeLicenseUrl ? <a className="underline underline-offset-2" href={safeLicenseUrl} target="_blank" rel="noopener noreferrer">{imageLicense}</a> : imageLicense}</span>}
+        {imageChanges && <span className="basis-full break-words">Changes: {imageChanges}</span>}
         {!imageCredit && !imageSource && !imageLicense && <span>Image attribution not recorded</span>}
       </figcaption>}
     </figure>

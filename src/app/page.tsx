@@ -7,21 +7,28 @@ import { MediaFrame } from "@/components/ui/media-frame";
 import { EncyclopediaCard } from "@/components/encyclopedia/encyclopedia-card";
 import { getEncyclopediaEntries } from "@/lib/supabase/encyclopedia";
 import { getNewsEntries } from "@/lib/supabase/news";
-import { getPlaces } from "@/lib/supabase/places";
 import { getSiteMediaByKey } from "@/lib/supabase/site-media";
+import { CURATED_IMAGES } from "@/lib/curated-images";
+import { getSafeImageSource } from "@/lib/media-images";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [entries, placeResult, newsEntries, profileHero] = await Promise.all([
+  const [entries, newsEntries, profileHero] = await Promise.all([
     getEncyclopediaEntries(),
-    getPlaces(),
     getNewsEntries(),
     getSiteMediaByKey("profile_hero"),
   ]);
-  const heritageEntry = entries.find((entry) => /culture|heritage|history/i.test(entry.category)) ?? null;
-  const featuredPlace = placeResult.places[0] ?? null;
   const recentNews = newsEntries[0] ?? null;
+  const storedHero = profileHero && getSafeImageSource(profileHero.image_url, Boolean(profileHero.image_source?.trim() && profileHero.image_license?.trim()))
+    ? profileHero
+    : null;
+  const heroImage = storedHero ? {
+    src: storedHero.image_url ?? CURATED_IMAGES.chitralTown.src,
+    imageSource: storedHero.image_source,
+    imageCredit: storedHero.image_credit,
+    imageLicense: storedHero.image_license,
+  } : CURATED_IMAGES.chitralTown;
 
   return (
     <AppShell>
@@ -46,13 +53,16 @@ export default async function Home() {
           </div>
           <Link href="/profile" className="group block min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">
             <MediaFrame
-              src={profileHero?.image_url ?? null}
-              alt="Image selected for the Chitral regional profile"
+              src={heroImage.src}
+              alt={storedHero ? "Image selected for the Chitral regional profile" : CURATED_IMAGES.chitralTown.alt}
               fallbackTitle="Hindu Kush · Chitral"
               fallbackDetail="Regional profile"
-              imageSource={profileHero?.image_source}
-              imageCredit={profileHero?.image_credit}
-              imageLicense={profileHero?.image_license}
+              imageSource={heroImage.imageSource}
+              imageSourceUrl={"imageSourceUrl" in heroImage ? heroImage.imageSourceUrl : undefined}
+              imageCredit={heroImage.imageCredit}
+              imageLicense={heroImage.imageLicense}
+              imageLicenseUrl={"imageLicenseUrl" in heroImage ? heroImage.imageLicenseUrl : undefined}
+              imageChanges={"imageChanges" in heroImage ? heroImage.imageChanges : undefined}
               className="aspect-[4/3] border border-[var(--color-line)] sm:aspect-[16/10]"
               sizes="(max-width: 1024px) 100vw, 45vw"
               preload
@@ -73,26 +83,18 @@ export default async function Home() {
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <HomeMediaCard
-              href={heritageEntry ? `/explore/${heritageEntry.id}` : "/explore"}
+              href="/explore"
               eyebrow="Heritage & culture"
-              title={heritageEntry?.title ?? "Explore Chitral's heritage"}
-              detail="Sourced stories and local knowledge from the archive."
-              src={heritageEntry?.image_url ?? null}
-              alt={heritageEntry ? `Image associated with ${heritageEntry.title}` : ""}
-              imageSource={heritageEntry?.image_source}
-              imageCredit={heritageEntry?.image_credit}
-              imageLicense={heritageEntry?.image_license}
+              title={CURATED_IMAGES.chilamJosh.title}
+              detail="A source-documented photograph of Chilam Josh in Bumburet."
+              image={CURATED_IMAGES.chilamJosh}
             />
             <HomeMediaCard
-              href={featuredPlace ? `/discover/${featuredPlace.id}` : "/discover"}
+              href="/discover"
               eyebrow="Places & tourism"
-              title={featuredPlace?.name ?? "Discover Chitral's places"}
-              detail="Destination records, place details, and map locations."
-              src={featuredPlace?.image_url ?? null}
-              alt={featuredPlace ? `Image associated with ${featuredPlace.name}` : ""}
-              imageSource={featuredPlace?.image_source}
-              imageCredit={featuredPlace?.image_credit}
-              imageLicense={featuredPlace?.image_license}
+              title={CURATED_IMAGES.qaqlashtMeadows.title}
+              detail="High meadows above Booni, documented by the original photographer."
+              image={CURATED_IMAGES.qaqlashtMeadows}
             />
             <HomeMediaCard
               href="/news"
@@ -163,19 +165,27 @@ function HomeMediaCard({
   imageSource,
   imageCredit,
   imageLicense,
+  image,
+  imageSourceUrl,
+  imageLicenseUrl,
+  imageChanges,
 }: {
   href: string;
   eyebrow: string;
   title: string;
   detail: string;
-  src: string | null;
-  alt: string;
+  src?: string | null;
+  alt?: string;
   imageSource?: string | null;
+  imageSourceUrl?: string | null;
   imageCredit?: string | null;
   imageLicense?: string | null;
+  imageLicenseUrl?: string | null;
+  imageChanges?: string | null;
+  image?: typeof CURATED_IMAGES[keyof typeof CURATED_IMAGES];
 }) {
   return <Link href={href} className="group min-w-0 border border-[var(--color-line)] bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">
-    <MediaFrame src={src} alt={alt} fallbackTitle={title} fallbackDetail={eyebrow} imageSource={imageSource} imageCredit={imageCredit} imageLicense={imageLicense} className="aspect-[4/3] border-b border-[var(--color-line)]" sizes="(max-width: 768px) 100vw, 33vw" />
+    <MediaFrame src={image?.src ?? src ?? null} alt={image?.alt ?? alt ?? ""} fallbackTitle={title} fallbackDetail={eyebrow} imageSource={image?.imageSource ?? imageSource} imageSourceUrl={image?.imageSourceUrl ?? imageSourceUrl} imageCredit={image?.imageCredit ?? imageCredit} imageLicense={image?.imageLicense ?? imageLicense} imageLicenseUrl={image?.imageLicenseUrl ?? imageLicenseUrl} imageChanges={image?.imageChanges ?? imageChanges} className="aspect-[4/3] border-b border-[var(--color-line)]" sizes="(max-width: 768px) 100vw, 33vw" />
     <div className="p-4 sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-copper-deep)]">{eyebrow}</p>
       <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-6 text-[var(--color-ink)] group-hover:text-[var(--color-copper-deep)]">{title}</h3>

@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { MediaFrame } from "@/components/ui/media-frame";
 import type { PlaceRow } from "@/lib/supabase/places";
+import { getCuratedPlaceImage } from "@/lib/curated-images";
+import { getSafeImageSource } from "@/lib/media-images";
 
 export function PlaceBrowser({ places }: { places: PlaceRow[] }) {
   const [query, setQuery] = useState("");
@@ -25,9 +27,11 @@ export function PlaceBrowser({ places }: { places: PlaceRow[] }) {
 }
 
 function PlaceCard({ place, preload }: { place: PlaceRow; preload: boolean }) {
+  const storedImageIsUsable = Boolean(getSafeImageSource(place.image_url, Boolean(place.image_source?.trim() && place.image_license?.trim())));
+  const curatedImage = storedImageIsUsable ? null : getCuratedPlaceImage(place.name);
   return (
     <Card className="flex h-full flex-col overflow-hidden">
-      <MediaFrame src={place.image_url} alt={`Image associated with ${place.name}`} fallbackTitle={place.name} fallbackDetail={place.category} imageSource={place.image_source ?? null} imageCredit={place.image_credit ?? null} imageLicense={place.image_license ?? null} preload={preload} className="aspect-[16/10] border-b border-[var(--color-line)]" />
+      <MediaFrame src={storedImageIsUsable ? place.image_url : curatedImage?.src ?? null} alt={curatedImage?.alt ?? `Image associated with ${place.name}`} fallbackTitle={place.name} fallbackDetail={place.category} imageSource={curatedImage?.imageSource ?? place.image_source ?? null} imageSourceUrl={curatedImage?.imageSourceUrl} imageCredit={curatedImage?.imageCredit ?? place.image_credit ?? null} imageLicense={curatedImage?.imageLicense ?? place.image_license ?? null} imageLicenseUrl={curatedImage?.imageLicenseUrl} imageChanges={curatedImage?.imageChanges} preload={preload} className="aspect-[16/10] border-b border-[var(--color-line)]" />
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-xl font-semibold leading-7 text-[var(--color-ink)]">{place.name}</h2>

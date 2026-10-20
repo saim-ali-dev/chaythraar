@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { MediaFrame } from "@/components/ui/media-frame";
 import { getSiteMediaByKey } from "@/lib/supabase/site-media";
+import { CURATED_IMAGES } from "@/lib/curated-images";
+import { getSafeImageSource } from "@/lib/media-images";
 
 const profileHighlights = [
   { title: "Geography", detail: "Chitral is a high mountain district in northern Khyber Pakhtunkhwa, defined by the Hindu Kush, glacial valleys, and seasonal passes." },
@@ -22,6 +24,23 @@ const focusAreas = [
 
 export default async function ChitralProfilePage() {
   const profileHero = await getSiteMediaByKey("profile_hero");
+  const useStoredHero = Boolean(profileHero && getSafeImageSource(profileHero.image_url, Boolean(profileHero.image_source?.trim() && profileHero.image_license?.trim())));
+  const heroImage = useStoredHero && profileHero ? {
+    src: profileHero.image_url ?? CURATED_IMAGES.chitralTown.src,
+    alt: CURATED_IMAGES.chitralTown.alt,
+    imageSource: profileHero.image_source,
+    imageCredit: profileHero.image_credit,
+    imageLicense: profileHero.image_license,
+  } : {
+    src: CURATED_IMAGES.chitralTown.src,
+    alt: CURATED_IMAGES.chitralTown.alt,
+    imageSource: CURATED_IMAGES.chitralTown.imageSource,
+    imageCredit: CURATED_IMAGES.chitralTown.imageCredit,
+    imageLicense: CURATED_IMAGES.chitralTown.imageLicense,
+    imageSourceUrl: CURATED_IMAGES.chitralTown.imageSourceUrl,
+    imageLicenseUrl: CURATED_IMAGES.chitralTown.imageLicenseUrl,
+    imageChanges: CURATED_IMAGES.chitralTown.imageChanges,
+  };
 
   return (
     <AppShell>
@@ -44,13 +63,16 @@ export default async function ChitralProfilePage() {
           </Card>
 
           <MediaFrame
-            src={profileHero?.image_url ?? null}
-            alt="Image selected for the Chitral regional profile"
+            src={heroImage.src}
+            alt={useStoredHero ? "Image selected for the Chitral regional profile" : heroImage.alt}
             fallbackTitle="Chitral landscape"
             fallbackDetail="Chitral profile"
-            imageSource={profileHero?.image_source}
-            imageCredit={profileHero?.image_credit}
-            imageLicense={profileHero?.image_license}
+            imageSource={heroImage.imageSource}
+            imageSourceUrl={heroImage.imageSourceUrl}
+            imageCredit={heroImage.imageCredit}
+            imageLicense={heroImage.imageLicense}
+            imageLicenseUrl={heroImage.imageLicenseUrl}
+            imageChanges={heroImage.imageChanges}
             preload
             className="aspect-[4/3] overflow-hidden border border-[var(--color-line)]"
             sizes="(max-width: 1024px) 100vw, 40vw"

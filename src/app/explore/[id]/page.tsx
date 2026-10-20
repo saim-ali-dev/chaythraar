@@ -9,6 +9,8 @@ import { Card } from "@/components/ui/card";
 import { getEncyclopediaEntryById } from "@/lib/supabase/encyclopedia";
 import { isMusicCategory } from "@/lib/content-categories";
 import { MediaFrame } from "@/components/ui/media-frame";
+import { getCuratedArchiveImage } from "@/lib/curated-images";
+import { getSafeImageSource } from "@/lib/media-images";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,8 @@ export default async function EncyclopediaArticlePage({ params }: ArticlePagePro
   const entry = await getEncyclopediaEntryById(id);
   if (!entry) notFound();
   const isMusicEntry = isMusicCategory(entry.category);
+  const storedImageIsUsable = Boolean(getSafeImageSource(entry.image_url, Boolean(entry.image_source?.trim() && entry.image_license?.trim())));
+  const curatedImage = storedImageIsUsable ? null : getCuratedArchiveImage(entry.title);
 
   return (
     <AppShell>
@@ -35,7 +39,7 @@ export default async function EncyclopediaArticlePage({ params }: ArticlePagePro
         <article className="mt-8">
           <header className="grid items-end gap-8 lg:grid-cols-[1fr_0.72fr]">
             <div><Badge tone="copper">{isMusicEntry ? "Music" : `${entry.category} · Encyclopedia`}</Badge><h1 className="font-editorial mt-5 text-4xl leading-tight text-[var(--color-ink)] sm:text-5xl">{entry.title}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-slate)]">A knowledge entry from the CHAYTHRAAR archive.</p></div>
-            <MediaFrame src={entry.image_url} alt={`Image associated with ${entry.title}`} fallbackTitle={entry.title} fallbackDetail={entry.category} imageSource={entry.image_source} imageCredit={entry.image_credit} imageLicense={entry.image_license} preload className="aspect-[4/3] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 40vw" />
+            <MediaFrame src={storedImageIsUsable ? entry.image_url : curatedImage?.src ?? null} alt={curatedImage?.alt ?? `Image associated with ${entry.title}`} fallbackTitle={entry.title} fallbackDetail={entry.category} imageSource={curatedImage?.imageSource ?? entry.image_source} imageSourceUrl={curatedImage?.imageSourceUrl} imageCredit={curatedImage?.imageCredit ?? entry.image_credit} imageLicense={curatedImage?.imageLicense ?? entry.image_license} imageLicenseUrl={curatedImage?.imageLicenseUrl} imageChanges={curatedImage?.imageChanges} preload className="aspect-[4/3] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 40vw" />
           </header>
 
           <div className="mt-10 grid gap-5 lg:grid-cols-[1fr_0.34fr]">

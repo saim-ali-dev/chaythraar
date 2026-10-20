@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { MediaFrame } from "@/components/ui/media-frame";
 import { getPlaceById } from "@/lib/supabase/places";
+import { getCuratedPlaceImage } from "@/lib/curated-images";
+import { getSafeImageSource } from "@/lib/media-images";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,8 @@ export default async function PlacePage({ params }: PlacePageProps) {
   const { id } = await params;
   const { place, error } = await getPlaceById(id);
   if (!place && !error) notFound();
+  const storedImageIsUsable = Boolean(place && getSafeImageSource(place.image_url, Boolean(place.image_source?.trim() && place.image_license?.trim())));
+  const curatedImage = place && !storedImageIsUsable ? getCuratedPlaceImage(place.name) : null;
 
   return (
     <AppShell>
@@ -33,7 +37,7 @@ export default async function PlacePage({ params }: PlacePageProps) {
           <article className="mt-6">
             <header className="grid items-start gap-7 border-b border-[var(--color-line-strong)] pb-8 lg:grid-cols-[1fr_0.82fr] lg:items-center">
               <div><Badge tone="copper">{place.category} · Chitral</Badge><h1 className="font-editorial mt-4 text-4xl leading-tight text-[var(--color-ink)] sm:text-5xl">{place.name}</h1><p className="mt-4 max-w-2xl text-base leading-7 text-[var(--color-slate)]">{place.description ?? "No description is available for this place."}</p></div>
-              <MediaFrame src={place.image_url} alt={`Image associated with ${place.name}`} fallbackTitle={place.name} fallbackDetail={place.category} imageSource={place.image_source ?? null} imageCredit={place.image_credit ?? null} imageLicense={place.image_license ?? null} preload className="aspect-[4/3] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 40vw" />
+              <MediaFrame src={storedImageIsUsable ? place.image_url : curatedImage?.src ?? null} alt={curatedImage?.alt ?? `Image associated with ${place.name}`} fallbackTitle={place.name} fallbackDetail={place.category} imageSource={curatedImage?.imageSource ?? place.image_source ?? null} imageSourceUrl={curatedImage?.imageSourceUrl} imageCredit={curatedImage?.imageCredit ?? place.image_credit ?? null} imageLicense={curatedImage?.imageLicense ?? place.image_license ?? null} imageLicenseUrl={curatedImage?.imageLicenseUrl} imageChanges={curatedImage?.imageChanges} preload className="aspect-[4/3] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 40vw" />
             </header>
             <section className="mt-8 grid gap-8 lg:grid-cols-[1fr_0.52fr]" aria-labelledby="place-information-heading">
               <div>
