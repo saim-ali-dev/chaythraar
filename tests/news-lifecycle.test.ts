@@ -7,6 +7,7 @@ import {
   isNewsWithinActiveWindow,
   NEWS_ACTIVE_LIMIT,
   NEWS_ACTIVE_WINDOW_MS,
+  NEWS_DISPLAY_LIMIT,
   NEWS_INGESTION_LIMIT,
   selectTopNewsItems,
   selectPendingNewsItems,
@@ -25,8 +26,9 @@ const NOW = new Date("2026-09-30T12:00:00.000Z");
 type NewsInsert = Database["public"]["Tables"]["news"]["Insert"];
 type NewsUpdate = Parameters<NewsIngestionRepository["update"]>[1];
 
-test("news ingestion cap is 15 while the active display limit remains 10", () => {
+test("public display limit is 20 without changing summarization or ingestion limits", () => {
   assert.equal(NEWS_INGESTION_LIMIT, 15);
+  assert.equal(NEWS_DISPLAY_LIMIT, 20);
   assert.equal(NEWS_ACTIVE_LIMIT, 10);
 });
 
@@ -70,7 +72,7 @@ test("material update detection ignores whitespace but catches source changes", 
   assert.equal(hasMaterialNewsChange(existing, makeItem(item.source_url, { published_at: "2026-09-30T12:00:00+00:00" })), false);
 });
 
-test("top-ten ordering is newest first with URL tie-breaks and allows fewer than ten", () => {
+test("top-news ordering is newest first and selects up to twenty", () => {
   const tied = [
     makeItem("https://example.test/z", { published_at: NOW.toISOString() }),
     makeItem("https://example.test/a", { published_at: NOW.toISOString() }),
@@ -78,7 +80,15 @@ test("top-ten ordering is newest first with URL tie-breaks and allows fewer than
   const ranked = selectTopNewsItems(tied);
 
   assert.deepEqual(ranked.map((item) => item.source_url), ["https://example.test/a", "https://example.test/z"]);
-  assert.equal(selectTopNewsItems(tied, 10).length, 2);
+  assert.equal(selectTopNewsItems(tied).length, 2);
+
+  const recent = Array.from({ length: 25 }, (_, index) => makeItem(
+    `https://example.test/display-${index}`,
+    { published_at: new Date(NOW.getTime() - index * 60_000).toISOString() },
+  ));
+  const displayed = selectTopNewsItems(recent);
+  assert.equal(displayed.length, 20);
+  assert.deepEqual(displayed.map((item) => item.source_url), recent.slice(0, 20).map((item) => item.source_url));
   assert.equal(hasGeneratedNewsSummary({ headline: " ", summary_short: "Summary" }), false);
 });
 

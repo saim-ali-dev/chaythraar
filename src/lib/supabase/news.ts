@@ -1,5 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getNewsActiveWindowStart, NEWS_ACTIVE_LIMIT } from "@/lib/news/lifecycle";
+import { getNewsActiveWindowStart, NEWS_DISPLAY_LIMIT } from "@/lib/news/lifecycle";
 import type { NewsEntry } from "@/types/content";
 
 export async function getNewsEntries(): Promise<NewsEntry[]> {
@@ -12,7 +12,7 @@ export async function getNewsEntries(): Promise<NewsEntry[]> {
       .gte("published_at", activeWindowStart)
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
-      .limit(NEWS_ACTIVE_LIMIT);
+      .limit(NEWS_DISPLAY_LIMIT);
 
     if (error) {
       console.error("Unable to load news entries.", error);

@@ -2,6 +2,7 @@ import type { NormalizedNewsItem } from "@/lib/news/types";
 
 export const NEWS_ACTIVE_WINDOW_MS = 48 * 60 * 60 * 1000;
 export const NEWS_ACTIVE_LIMIT = 10;
+export const NEWS_DISPLAY_LIMIT = 20;
 export const NEWS_INGESTION_LIMIT = 15;
 
 export type ExistingNewsContent = Pick<
@@ -56,7 +57,7 @@ export function hasMaterialNewsChange(existing: ExistingNewsContent, candidate: 
     || parseTimestamp(existing.published_at) !== parseTimestamp(candidate.published_at);
 }
 
-export function selectTopNewsItems<T extends Pick<NormalizedNewsItem, "published_at" | "source_url" | "source">>(items: T[], limit = NEWS_ACTIVE_LIMIT): T[] {
+export function selectTopNewsItems<T extends Pick<NormalizedNewsItem, "published_at" | "source_url" | "source">>(items: T[], limit = NEWS_DISPLAY_LIMIT): T[] {
   return [...items]
     .sort((left, right) => parseTimestamp(right.published_at) - parseTimestamp(left.published_at)
       || compareText(left.source_url, right.source_url)
