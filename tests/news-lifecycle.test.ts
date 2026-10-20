@@ -5,7 +5,9 @@ import {
   hasGeneratedNewsSummary,
   hasMaterialNewsChange,
   isNewsWithinActiveWindow,
+  NEWS_ACTIVE_LIMIT,
   NEWS_ACTIVE_WINDOW_MS,
+  NEWS_INGESTION_LIMIT,
   selectTopNewsItems,
   selectPendingNewsItems,
 } from "@/lib/news/lifecycle";
@@ -22,6 +24,11 @@ import type { Database } from "@/lib/supabase/database.types";
 const NOW = new Date("2026-09-30T12:00:00.000Z");
 type NewsInsert = Database["public"]["Tables"]["news"]["Insert"];
 type NewsUpdate = Parameters<NewsIngestionRepository["update"]>[1];
+
+test("news ingestion cap is 15 while the active display limit remains 10", () => {
+  assert.equal(NEWS_INGESTION_LIMIT, 15);
+  assert.equal(NEWS_ACTIVE_LIMIT, 10);
+});
 
 test("the 48-hour active boundary is inclusive in UTC", () => {
   const boundary = new Date(NOW.getTime() - NEWS_ACTIVE_WINDOW_MS).toISOString();
@@ -234,7 +241,7 @@ test("a changed newer candidate beyond the cap remains pending until a later run
   const existing = makeExisting(oldItem);
   repository.rows.push(existing);
   const changedItem = { ...oldItem, summary: "Updated source excerpt." };
-  const olderItems = Array.from({ length: 10 }, (_, index) => makeItem(
+  const olderItems = Array.from({ length: 15 }, (_, index) => makeItem(
     `https://example.test/older-${index}`,
     {
       title: `Older candidate ${index}`,
@@ -252,12 +259,12 @@ test("a changed newer candidate beyond the cap remains pending until a later run
   const first = await ingestNewsSources([source], options);
 
   assert.equal(first.updated, 1);
-  assert.equal(first.selected, 10);
+  assert.equal(first.selected, 15);
   assert.equal(first.not_selected, 1);
-  assert.equal(first.summarized, 10);
+  assert.equal(first.summarized, 15);
   assert.equal(first.updatedRows, 0);
   assert.equal(summarizedTitles.includes("Newest changed candidate"), false);
-  assert.equal(repository.rows.length, 11);
+  assert.equal(repository.rows.length, 16);
   const unchangedStored = repository.rows.find((row) => row.id === existing.id);
   assert.equal(unchangedStored?.summary, "A source excerpt.");
 
@@ -273,14 +280,14 @@ test("a changed newer candidate beyond the cap remains pending until a later run
   assert.equal(storedChanged?.headline, "Generated: Newest changed candidate");
 });
 
-test("only the ten newest recent candidates are summarized and stored", async () => {
+test("the 15 oldest recent candidates are summarized and stored", async () => {
   const repository = new MemoryNewsRepository();
   let summaryCalls = 0;
   const summarize = async (input: NewsSummarizationInput) => {
     summaryCalls += 1;
     return summaryFor(input);
   };
-  const recent = Array.from({ length: 12 }, (_, index) => makeItem(
+  const recent = Array.from({ length: 17 }, (_, index) => makeItem(
     `https://example.test/${index}`,
     { published_at: new Date(NOW.getTime() - index * 60_000).toISOString() },
   ));
@@ -292,20 +299,22 @@ test("only the ten newest recent candidates are summarized and stored", async ()
     makeOptions(repository, summarize),
   );
 
-  assert.equal(report.fetched, 13);
-  assert.equal(report.recent, 12);
+  assert.equal(report.fetched, 18);
+  assert.equal(report.recent, 17);
   assert.equal(report.filtered, 1);
-  assert.equal(report.selected, 10);
+  assert.equal(report.selected, 15);
   assert.equal(report.not_selected, 2);
   assert.equal(report.skipped, 1);
-  assert.equal(report.summarized, 10);
-  assert.equal(summaryCalls, 10);
-  assert.equal(report.inserted, 10);
-  assert.equal(repository.rows.length, 10);
+  assert.equal(report.summarized, 15);
+  assert.equal(summaryCalls, 15);
+  assert.equal(report.inserted, 15);
+  assert.equal(repository.rows.length, 15);
   assert.equal(repository.rows.some((row) => row.source_url === old.source_url), false);
+  assert.equal(repository.rows.some((row) => row.source_url === recent[0]?.source_url), false);
+  assert.equal(repository.rows.some((row) => row.source_url === recent[1]?.source_url), false);
 });
 
-test("older pending articles share the 10-item run with newer arrivals", async () => {
+test("near-expiry pending articles take priority within the 15-item cap", async () => {
   const repository = new MemoryNewsRepository();
   const olderPendingItems = Array.from({ length: 5 }, (_, index) => makeItem(
     `https://example.test/near-expiry-${index}`,
@@ -322,7 +331,7 @@ test("older pending articles share the 10-item run with newer arrivals", async (
     existing.urdu_translation_attempted_at = null;
     repository.rows.push(existing);
   }
-  const newItems = Array.from({ length: 10 }, (_, index) => makeItem(
+  const newItems = Array.from({ length: 15 }, (_, index) => makeItem(
     `https://example.test/new-arrival-${index}`,
     {
       title: `New arrival ${index}`,
@@ -335,15 +344,16 @@ test("older pending articles share the 10-item run with newer arrivals", async (
     makeOptions(repository),
   );
 
-  assert.equal(selectPendingNewsItems([...olderPendingItems, ...newItems]).length, 10);
-  assert.equal(report.selected, 10);
+  assert.equal(selectPendingNewsItems([...olderPendingItems, ...newItems]).length, 15);
+  assert.equal(report.selected, 15);
   assert.equal(report.updatedRows, 5);
-  assert.equal(report.inserted, 5);
+  assert.equal(report.inserted, 10);
   assert.ok(olderPendingItems.every((item) => {
     const row = repository.rows.find((candidate) => candidate.source_url === item.source_url);
     return Boolean(row?.headline_ur && row.urdu_translation_attempted_at);
   }));
-  assert.equal(repository.rows.filter((row) => row.source_url?.includes("new-arrival-")).length, 5);
+  assert.equal(repository.rows.filter((row) => row.source_url?.includes("new-arrival-")).length, 10);
+  assert.equal(report.not_selected, 5);
 });
 
 test("articles beyond the per-run cap are processed on the next run", async () => {
@@ -353,7 +363,7 @@ test("articles beyond the per-run cap are processed on the next run", async () =
     summarizedTitles.push(input.originalTitle);
     return summaryFor(input);
   };
-  const items = Array.from({ length: 15 }, (_, index) => makeItem(
+  const items = Array.from({ length: 20 }, (_, index) => makeItem(
     `https://example.test/backlog-${index}`,
     {
       title: `Backlog story ${index}`,
@@ -367,15 +377,15 @@ test("articles beyond the per-run cap are processed on the next run", async () =
   const second = await ingestNewsSources([source], options);
   const third = await ingestNewsSources([source], options);
 
-  assert.equal(first.inserted, 10);
-  assert.equal(first.selected, 10);
+  assert.equal(first.inserted, 15);
+  assert.equal(first.selected, 15);
   assert.equal(second.inserted, 5);
   assert.equal(second.selected, 5);
   assert.equal(third.inserted, 0);
   assert.equal(third.selected, 0);
-  assert.equal(repository.rows.length, 15);
-  assert.equal(summarizedTitles.length, 15);
-  assert.equal(new Set(summarizedTitles).size, 15);
+  assert.equal(repository.rows.length, 20);
+  assert.equal(summarizedTitles.length, 20);
+  assert.equal(new Set(summarizedTitles).size, 20);
 });
 
 test("the same URL from two sources remains two records", async () => {

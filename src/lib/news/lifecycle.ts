@@ -2,6 +2,7 @@ import type { NormalizedNewsItem } from "@/lib/news/types";
 
 export const NEWS_ACTIVE_WINDOW_MS = 48 * 60 * 60 * 1000;
 export const NEWS_ACTIVE_LIMIT = 10;
+export const NEWS_INGESTION_LIMIT = 15;
 
 export type ExistingNewsContent = Pick<
   NormalizedNewsItem,
@@ -63,7 +64,7 @@ export function selectTopNewsItems<T extends Pick<NormalizedNewsItem, "published
     .slice(0, Math.max(0, limit));
 }
 
-export function selectPendingNewsItems<T extends Pick<NormalizedNewsItem, "published_at" | "source_url" | "source">>(items: T[], limit = NEWS_ACTIVE_LIMIT): T[] {
+export function selectPendingNewsItems<T extends Pick<NormalizedNewsItem, "published_at" | "source_url" | "source">>(items: T[], limit = NEWS_INGESTION_LIMIT): T[] {
   return [...items]
     .sort((left, right) => parseTimestamp(left.published_at) - parseTimestamp(right.published_at)
       || compareText(left.source_url, right.source_url)
