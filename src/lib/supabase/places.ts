@@ -8,7 +8,7 @@ export async function getPlaces(): Promise<{ places: PlaceRow[]; error: string |
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase
       .from("places")
-      .select("id, name, description, latitude, longitude, category, image_url, opening_time, closing_time, source, created_at")
+      .select("id, name, description, latitude, longitude, category, image_url, image_source, image_credit, image_license, opening_time, closing_time, source, created_at")
       .order("name", { ascending: true });
 
     if (error) {
@@ -28,7 +28,7 @@ export async function getPlaceById(id: string): Promise<{ place: PlaceRow | null
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase
       .from("places")
-      .select("id, name, description, latitude, longitude, category, image_url, opening_time, closing_time, source, created_at")
+      .select("id, name, description, latitude, longitude, category, image_url, image_source, image_credit, image_license, opening_time, closing_time, source, created_at")
       .eq("id", id)
       .maybeSingle();
 

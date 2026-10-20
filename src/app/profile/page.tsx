@@ -45,9 +45,13 @@ export default async function ChitralProfilePage() {
 
           <MediaFrame
             src={profileHero?.image_url ?? null}
-            alt="Profile image for Chitral"
+            alt="Image selected for the Chitral regional profile"
             fallbackTitle="Chitral landscape"
             fallbackDetail="Chitral profile"
+            imageSource={profileHero?.image_source}
+            imageCredit={profileHero?.image_credit}
+            imageLicense={profileHero?.image_license}
+            preload
             className="aspect-[4/3] overflow-hidden border border-[var(--color-line)]"
             sizes="(max-width: 1024px) 100vw, 40vw"
           />

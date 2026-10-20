@@ -6,6 +6,9 @@ export type EncyclopediaEntry = {
   category: string;
   content: string;
   image_url: string | null;
+  image_source?: string | null;
+  image_credit?: string | null;
+  image_license?: string | null;
   source: string | null;
   source_url: string | null;
   media_url: string | null;
@@ -51,6 +54,9 @@ export type NewsEntry = {
   source: string;
   source_url: string | null;
   image_url: string | null;
+  image_source?: string | null;
+  image_credit?: string | null;
+  image_license?: string | null;
   published_at: string;
   category: string;
   created_at: string;

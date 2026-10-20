@@ -6,12 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { MediaFrame } from "@/components/ui/media-frame";
 import { EncyclopediaCard } from "@/components/encyclopedia/encyclopedia-card";
 import { getEncyclopediaEntries } from "@/lib/supabase/encyclopedia";
+import { getNewsEntries } from "@/lib/supabase/news";
+import { getPlaces } from "@/lib/supabase/places";
+import { getSiteMediaByKey } from "@/lib/supabase/site-media";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const entries = await getEncyclopediaEntries();
-  const featuredEntry = entries[0];
+  const [entries, placeResult, newsEntries, profileHero] = await Promise.all([
+    getEncyclopediaEntries(),
+    getPlaces(),
+    getNewsEntries(),
+    getSiteMediaByKey("profile_hero"),
+  ]);
+  const heritageEntry = entries.find((entry) => /culture|heritage|history/i.test(entry.category)) ?? null;
+  const featuredPlace = placeResult.places[0] ?? null;
+  const recentNews = newsEntries[0] ?? null;
 
   return (
     <AppShell>
@@ -34,20 +44,68 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-          <Link href={featuredEntry ? `/explore/${featuredEntry.id}` : "/explore"} className="group block min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">
+          <Link href="/profile" className="group block min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">
             <MediaFrame
-              src={featuredEntry?.image_url ?? null}
-              alt={featuredEntry?.title ?? ""}
-              fallbackTitle={featuredEntry?.title ?? "Explore knowledge from Chitral"}
-              fallbackDetail={featuredEntry?.category ?? "Culture · history · language · place"}
+              src={profileHero?.image_url ?? null}
+              alt="Image selected for the Chitral regional profile"
+              fallbackTitle="Hindu Kush · Chitral"
+              fallbackDetail="Regional profile"
+              imageSource={profileHero?.image_source}
+              imageCredit={profileHero?.image_credit}
+              imageLicense={profileHero?.image_license}
               className="aspect-[4/3] border border-[var(--color-line)] sm:aspect-[16/10]"
               sizes="(max-width: 1024px) 100vw, 45vw"
+              preload
             />
-            {featuredEntry && <div className="mt-3 flex items-baseline justify-between gap-4 border-b border-[var(--color-line)] pb-3">
-              <span className="min-w-0 truncate text-sm font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-copper-deep)]">{featuredEntry.title}</span>
-              <span className="shrink-0 text-xs text-[var(--color-muted)]">From the archive</span>
-            </div>}
+            <div className="mt-3 flex items-baseline justify-between gap-4 border-b border-[var(--color-line)] pb-3">
+              <span className="min-w-0 truncate text-sm font-semibold text-[var(--color-ink)] group-hover:text-[var(--color-copper-deep)]">Chitral and the Hindu Kush</span>
+              <span className="shrink-0 text-xs text-[var(--color-muted)]">Regional profile</span>
+            </div>
           </Link>
+        </section>
+
+        <section className="mt-10" aria-labelledby="home-visual-guides-heading">
+          <div className="flex items-end justify-between gap-4 border-b border-[var(--color-line-strong)] pb-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-copper-deep)]">A closer look</p>
+              <h2 id="home-visual-guides-heading" className="font-editorial mt-2 text-2xl leading-tight text-[var(--color-ink)] sm:text-3xl">Stories, places, and living heritage</h2>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <HomeMediaCard
+              href={heritageEntry ? `/explore/${heritageEntry.id}` : "/explore"}
+              eyebrow="Heritage & culture"
+              title={heritageEntry?.title ?? "Explore Chitral's heritage"}
+              detail="Sourced stories and local knowledge from the archive."
+              src={heritageEntry?.image_url ?? null}
+              alt={heritageEntry ? `Image associated with ${heritageEntry.title}` : ""}
+              imageSource={heritageEntry?.image_source}
+              imageCredit={heritageEntry?.image_credit}
+              imageLicense={heritageEntry?.image_license}
+            />
+            <HomeMediaCard
+              href={featuredPlace ? `/discover/${featuredPlace.id}` : "/discover"}
+              eyebrow="Places & tourism"
+              title={featuredPlace?.name ?? "Discover Chitral's places"}
+              detail="Destination records, place details, and map locations."
+              src={featuredPlace?.image_url ?? null}
+              alt={featuredPlace ? `Image associated with ${featuredPlace.name}` : ""}
+              imageSource={featuredPlace?.image_source}
+              imageCredit={featuredPlace?.image_credit}
+              imageLicense={featuredPlace?.image_license}
+            />
+            <HomeMediaCard
+              href="/news"
+              eyebrow="Recent news"
+              title={recentNews?.headline ?? recentNews?.title ?? "News from the network"}
+              detail={recentNews ? `Latest update · ${recentNews.source}` : "Local reporting with original sources."}
+              src={recentNews?.image_url ?? null}
+              alt={recentNews ? `Article image associated with ${recentNews.headline ?? recentNews.title}` : ""}
+              imageSource={recentNews?.image_source}
+              imageCredit={recentNews?.image_credit}
+              imageLicense={recentNews?.image_license}
+            />
+          </div>
         </section>
 
         <section className="mt-10" aria-labelledby="archive-preview-heading">
@@ -92,5 +150,36 @@ function QuickLink({ href, icon: Icon, title, detail }: { href: string; icon: ty
     <Icon className="size-5 shrink-0 text-[var(--color-copper-deep)]" />
     <span className="min-w-0"><span className="block font-semibold text-[var(--color-ink)]">{title}</span><span className="mt-1 block text-sm leading-5 text-[var(--color-muted)]">{detail}</span></span>
     <ArrowUpRight className="ml-auto size-4 shrink-0 text-[var(--color-muted)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+  </Link>;
+}
+
+function HomeMediaCard({
+  href,
+  eyebrow,
+  title,
+  detail,
+  src,
+  alt,
+  imageSource,
+  imageCredit,
+  imageLicense,
+}: {
+  href: string;
+  eyebrow: string;
+  title: string;
+  detail: string;
+  src: string | null;
+  alt: string;
+  imageSource?: string | null;
+  imageCredit?: string | null;
+  imageLicense?: string | null;
+}) {
+  return <Link href={href} className="group min-w-0 border border-[var(--color-line)] bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">
+    <MediaFrame src={src} alt={alt} fallbackTitle={title} fallbackDetail={eyebrow} imageSource={imageSource} imageCredit={imageCredit} imageLicense={imageLicense} className="aspect-[4/3] border-b border-[var(--color-line)]" sizes="(max-width: 768px) 100vw, 33vw" />
+    <div className="p-4 sm:p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-copper-deep)]">{eyebrow}</p>
+      <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-6 text-[var(--color-ink)] group-hover:text-[var(--color-copper-deep)]">{title}</h3>
+      <p className="mt-2 text-sm leading-5 text-[var(--color-slate)]">{detail}</p>
+    </div>
   </Link>;
 }

@@ -27,11 +27,11 @@ export default async function TeamPage() {
         </p>
 
         <section aria-label="Team members" className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {teamMembers.map((member) => {
+          {teamMembers.map((member, index) => {
             const media = teamMedia.find((item) => item.media_key === member.mediaKey);
             return (
             <Card key={member.name} className={`group flex min-w-0 flex-col overflow-hidden border-[var(--color-line)] bg-white transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-[var(--color-line-strong)] hover:shadow-[0_10px_28px_rgba(28,43,53,0.08)] motion-reduce:transition-none ${member.lead ? "border-t-2 border-t-[var(--color-copper)]" : ""}`}>
-              <MediaFrame src={media?.image_url ?? null} alt={`Portrait of ${member.name}`} fallbackTitle={member.name} fallbackDetail={member.role} className="aspect-[3/4] border-b border-[var(--color-line)]" sizes="(max-width: 640px) 100vw, 25vw" />
+              <MediaFrame src={media?.image_url ?? null} alt={`Portrait of ${member.name}`} fallbackTitle={member.name} fallbackDetail={member.role} imageSource={media?.image_source} imageCredit={media?.image_credit} imageLicense={media?.image_license} preload={index === 0} className="aspect-[3/4] border-b border-[var(--color-line)]" sizes="(max-width: 640px) 100vw, 25vw" />
 
               <div className="flex flex-1 flex-col p-5 sm:p-6">
                 <h2 className="min-w-0 break-words text-lg font-semibold text-[var(--color-ink)]">{member.name}</h2>

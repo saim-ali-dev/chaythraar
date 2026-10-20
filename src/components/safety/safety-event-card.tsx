@@ -29,7 +29,7 @@ export function SafetyEventCard({ event }: SafetyEventCardProps) {
       </div>
       <p className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">{event.event_type}</p>
       <h2 className="mt-2 text-xl font-semibold leading-7 text-[var(--color-ink)]">{event.title}</h2>
-      {event.source_type === "community" && <MediaFrame src={event.image_url ?? null} alt={`Photo for ${event.title}`} fallbackTitle={event.title} fallbackDetail={event.event_type} className="mt-4 aspect-[16/9] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 33vw" />}
+      {event.source_type === "community" && <MediaFrame src={event.image_url ?? null} alt={`Community-submitted photo associated with ${event.title}`} fallbackTitle={event.title} fallbackDetail={event.event_type} imageSource="Community report" className="mt-4 aspect-[16/9] border border-[var(--color-line)]" sizes="(max-width: 1024px) 100vw, 33vw" />}
       <p className={`mt-3 text-sm leading-6 text-[var(--color-slate)] ${event.description.length > 400 ? "line-clamp-5" : ""}`}>{event.description}</p>
       {event.description.length > 400 && <details className="mt-2 text-sm"><summary className="min-h-10 cursor-pointer py-2 font-semibold text-[var(--color-copper-deep)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-copper)]">Show full description</summary><p className="whitespace-pre-wrap pt-2 text-sm leading-6 text-[var(--color-slate)]">{event.description}</p></details>}
       {event.additional_details && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--color-slate)]">{event.additional_details}</p>}

@@ -7,12 +7,13 @@ import type { EncyclopediaEntry } from "@/types/content";
 
 type EncyclopediaCardProps = {
   entry: EncyclopediaEntry;
+  preload?: boolean;
 };
 
-export function EncyclopediaCard({ entry }: EncyclopediaCardProps) {
+export function EncyclopediaCard({ entry, preload = false }: EncyclopediaCardProps) {
   return (
     <Card className="group flex h-full flex-col overflow-hidden transition-transform hover:-translate-y-0.5">
-      <MediaFrame src={entry.image_url} alt={entry.title} fallbackTitle={entry.title} fallbackDetail={entry.category} className="aspect-[16/10] border-b border-[var(--color-line)]" />
+      <MediaFrame src={entry.image_url} alt={`Image associated with ${entry.title}`} fallbackTitle={entry.title} fallbackDetail={entry.category} imageSource={entry.image_source} imageCredit={entry.image_credit} imageLicense={entry.image_license} preload={preload} className="aspect-[16/10] border-b border-[var(--color-line)]" />
       <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <Badge tone="copper">{entry.category}</Badge>
