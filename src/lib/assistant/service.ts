@@ -5,6 +5,7 @@ import { embedVoyageQuery } from "@/lib/embeddings/voyage";
 import { getKhowarGlossarySearchTerms, isKhowarGlossaryQuestion } from "@/lib/assistant/khowar-query";
 import { completeAssistantJson } from "@/lib/news/summarize";
 import { matchKnowledgeChunks, matchKhowarGlossaryChunks, type KnowledgeSourceType } from "@/lib/supabase/rag";
+import { answerWeatherQuestion, isWeatherQuestion } from "@/lib/assistant/weather";
 
 const MAX_MATCHED_CHUNKS = 15;
 const MAX_KHOWAR_GLOSSARY_MATCHES = 8;
@@ -52,6 +53,8 @@ export function logAssistantRuntimeError(error: unknown): void {
 }
 
 export async function answerAssistantMessage(message: string): Promise<AssistantResult> {
+  if (isWeatherQuestion(message)) return answerWeatherQuestion(message);
+
   let matches;
   const isGlossaryQuestion = isKhowarGlossaryQuestion(message);
   const glossaryMatchesPromise = isGlossaryQuestion
